@@ -79,7 +79,7 @@
   }
   .goal {
     margin: 0;
-    font-size: clamp(20px, 4.2vmin, 40px);
+    font-size: clamp(20px, 4.6vmin, 44px);
     font-weight: 900;
     line-height: 1.15;
   }
@@ -100,7 +100,7 @@
     gap: 4px;
   }
   .name {
-    font-size: clamp(16px, 2.6vmin, 22px);
+    font-size: clamp(16px, 3vmin, 26px);
     font-weight: 800;
   }
   .done .name::before {
@@ -115,7 +115,7 @@
     background: #fff;
     color: var(--ink);
     font: inherit;
-    font-size: clamp(16px, 2.6vmin, 22px);
+    font-size: clamp(16px, 3vmin, 26px);
     font-weight: 800;
     text-align: center;
     box-shadow: 0 3px 0 #9fb4cc;
@@ -183,10 +183,10 @@
   @media (max-height: 480px) {
     .win {
       gap: 6px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
     h1 {
-      font-size: 30px;
+      font-size: 28px;
     }
     button {
       min-height: 64px;
