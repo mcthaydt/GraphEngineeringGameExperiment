@@ -40,6 +40,9 @@ export function createScene(course: Course, tuning: Tuning): Scene {
   const rig = createCameraRig(tuning.camera, { ...course.start, grounded: true });
   let seconds = 0;
   let snapCamera = true;
+  // Where the hero was last drawn, so an exit puff can go there.
+  let shown = { x: course.start.x, y: course.start.y, z: course.start.z };
+  let hops = 0;
 
   return {
     view,
@@ -47,12 +50,16 @@ export function createScene(course: Course, tuning: Tuning): Scene {
       for (const event of events) {
         if (event.type === 'jump') {
           hero.jump();
-          effects.dust(now.x, now.y, now.z, 3);
+          effects.takeoff(now.x, now.y, now.z);
         } else if (event.type === 'land') {
           hero.land(event.speed);
-          effects.dust(now.x, now.y, now.z, event.speed * 0.5);
+          effects.land(now.x, now.y, now.z, event.speed);
         } else if (event.type === 'fall') {
           snapCamera = true;
+          // The hero leaves in a puff where it was last drawn, then pops back in at the start.
+          effects.vanish(shown.x, shown.y, shown.z);
+          hero.arrive();
+          effects.arrive(now.x, now.y, now.z);
         } else {
           effects.confetti(course.flag.x, course.flag.y, course.flag.z);
         }
@@ -68,8 +75,11 @@ export function createScene(course: Course, tuning: Tuning): Scene {
 
       hero.update(pose, dt);
       flag.update(seconds);
+      effects.shadow(pose.x, pose.z, now.groundY, now.groundY === null ? 0 : pose.y + hero.lift() - now.groundY);
       effects.update(dt);
-      effects.shadow(pose.x, pose.z, now.groundY, now.groundY === null ? 0 : pose.y - now.groundY);
+      if (hero.hops() > hops) effects.sparkle(pose.x, pose.y, pose.z);
+      hops = hero.hops();
+      shown = { x: pose.x, y: pose.y, z: pose.z };
 
       if (snapCamera) rig.snap(pose);
       snapCamera = false;
