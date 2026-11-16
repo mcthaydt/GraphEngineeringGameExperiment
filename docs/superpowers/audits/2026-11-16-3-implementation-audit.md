@@ -101,3 +101,18 @@ Every hunk maps to a criterion. Nothing unrelated changed.
 
 Cycle 2 notes N2 and N3 (placement and wording of rules 6 and 7) and N6 (dangling "builders") are resolved by this
 round. N5 (who creates the repo) is resolved by the apps wording "every step only the owner can run".
+
+## Re-check of R3 at `01890cd`
+
+**Verdict: PASS** (R3 fixed; no red findings left. The 8 notes above stand as follow-ups.)
+
+Commit examined: `01890cd` on `claude/project-thread-diycz9`. Re-check written 2026-11-16 17:22 UTC (from `date -u`).
+
+- Since `9865424`, the only changes are this audit file (`a132c6b`) and `.claude/skills/vertical-slice/SKILL.md`
+  (`01890cd`): `git diff --stat a132c6b 01890cd` lists only that skill, 7 lines.
+- R3: "the stages start, with the slice as the spec's starting point" now reads "later work starts from it. Each piece
+  of later work takes the short or the staged path by its own risk, with the slice as the starting point of its brief."
+  "written into the spec" and "the spec names a runnable baseline" now say "the brief". `git grep` finds no "stages
+  start" and no "spec" left in the skill outside the Gauntlet prompt's ordinary words. This agrees with criterion 8
+  and with the skill's own delivery-order bullet.
+- Commit `01890cd`: author mcthaydt; no co-author, no Claude-Session trailer, no "Generated with Claude Code" line.
