@@ -11,6 +11,9 @@ export interface Wish {
 
 // How far ahead of its feet the pilot looks for ground, in metres.
 const LOOK = 0.9;
+// A stone this deep or less is reached with a short hop, and a hop that clears it by this much.
+const SMALL = 2.2;
+const CLEAR = 0.35;
 
 /** A simple player: heads for the next platform and jumps when the ground ahead runs out. */
 export function createAutopilot(course: Course) {
@@ -30,8 +33,9 @@ export function createAutopilot(course: Course) {
       right: dx > 0.35,
       up: dz < -0.35,
       down: dz > 0.35,
-      // Hold the jump all the way up for a full leap.
-      jump: (s.grounded && edge) || (!s.grounded && s.vy > 0),
+      // Hold the jump all the way up for a full leap, but let go once high enough for a small stone: a full leap
+      // would carry past it.
+      jump: (s.grounded && edge) || (!s.grounded && s.vy > 0 && !(next && next.depth <= SMALL && s.y >= next.y + CLEAR)),
     };
   };
 }

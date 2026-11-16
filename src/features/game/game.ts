@@ -81,7 +81,7 @@ const boot = (options: GameOptions): Effect.Effect<Game, BootError> =>
     let lastFrame: number | undefined;
     const hints = createHints(screens.ui, course.start);
 
-    /** Nothing may keep moving the hero after a win, a fall or Play again: the player has to press again. */
+    /** Nothing may keep moving the hero after a win or Play again: the player has to press again. */
     function letGo(): void {
       input.clear();
       screens.ui.letGo++;
@@ -104,15 +104,17 @@ const boot = (options: GameOptions): Effect.Effect<Game, BootError> =>
         const events = sim.step(intent);
         before = now;
         now = sim.snapshot();
-        scene.react(events, now);
+        // `drop` is for the sound alone: the scene reacts to the fall when the hero is put back at the start.
+        scene.react(
+          events.filter((event) => event.type !== 'drop'),
+          now,
+        );
         hints.step(STEP_SECONDS, now, intent.moveX !== 0 || intent.moveZ !== 0 || intent.jump);
         for (const event of events) {
           sound?.play(event);
           if (event.type === 'jump') hints.jumped();
-          if (event.type === 'fall') {
-            letGo();
-            hints.fell(course.start);
-          }
+          // A key still held after a fall keeps working, so the player runs on from the start without lifting a finger.
+          if (event.type === 'fall') hints.fell(course.start);
           if (event.type === 'win') {
             letGo();
             screens.ui.won = true;
