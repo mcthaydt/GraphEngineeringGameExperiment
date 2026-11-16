@@ -9,8 +9,10 @@ description: Use when opening a pull request, waiting on checks, merging, deleti
 
 The first session in a repo runs this first, before it builds anything, and again when the CI, the runtime or the
 superpowers version changes. It verifies each item, sets up what is missing with the owner's authorization (CI workflow
-files are lane 3), and reports each one as present, added or missing:
+files are lane 3, except at first-time setup: see Risk in CLAUDE.md), and reports each one as present, added or missing:
 
+- Every step only the owner can run (creating the repo, branch protection, deleting branches, credentials), listed as
+  one batch of CLI commands before building, so the owner is not needed mid-run.
 - The commands in Stack and checks (CLAUDE.md) run, and pass on `main`.
 - The CI gate described below: the workflow triggers (with `ready_for_review` on a public repo), the job that decides
   which checks apply, and the final aggregate gate job.
