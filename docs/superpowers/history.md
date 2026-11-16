@@ -30,6 +30,11 @@
   `vertical-slice` skill, and removing `docs/superpowers/specs/2026-11-16-slice-b-brief.md`. PR #7, audited at d4d0d2c (PASS, `audits/2026-11-16-4-implementation-audit.md`); its merge commit is the PR #7 merge on `main` (af07cb3).
 - 2026-11-16 18:17 UTC: the owner cut the CLAUDE.md "Fable orchestrates" bullet and its Settings wording and kept the
   `vertical-slice` Gauntlet change. Scope: those two edits only.
+- 2026-11-16 19:21 UTC: the owner asked for a retro after every slice (instead of a daily one). Scope: the Retro bullet
+  and Settings wording in CLAUDE.md, the retro stage in the `vertical-slice` skill and the lesson line in `review`.
+  Not covered by that message: the "Flaky tests" section in this file and the CLAUDE.md Tests wording that points to
+  it, added after review (audit cycle 6) so the retro can find flaky tests. The owner approved them separately on a
+  decision card at 19:27 UTC (kept). Scope: those two lines only.
 - 2026-11-16 16:14 UTC: the owner said "ok" to merging PR #1 once CI is green and to requiring the `gate` check on
   `main` with branch protection. Scope: PR #1 and that one repository setting.
 - 2026-11-16 16:29 UTC: the owner accepted one fresh implementation audit for PR #1 in place of a spec and plan audit
@@ -39,6 +44,10 @@
   their GitHub access, so those are owner CLI steps.
 
 ## Approved screens
+
+- None yet.
+
+## Flaky tests
 
 - None yet.
 

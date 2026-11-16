@@ -82,6 +82,9 @@ The lead orchestrates. It runs on Fable at medium effort, splits the work and wr
   brief and follows the shared risk rules: work inside it takes the short or the staged path by its own risk, and
   independent pieces run side by side within the limits in Settings. Later work follows those shared paths; the
   Gauntlet prompt is not run again.
+- **The retro is the last stage of every slice**, the first one included (see Retro in CLAUDE.md). After the slice ends,
+  a fresh thread reads its audits, flaky tests and repeat fixes, turns each lesson into a test where it can, and
+  proposes the rest as one rule-change pull request for the owner to approve. The next slice can start once the retro's pull request is open.
 - `docs/superpowers/roadmap.md` lists everything left, in order, with who does each step (the owner or a session) and
   where it stands. The coordinator keeps it current. A milestone is done when it is merged to `main`, green there, its
   screens have been through the design review loop (`visual-check`), and the owner has approved the finished result.
