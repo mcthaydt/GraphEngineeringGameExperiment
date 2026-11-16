@@ -45,13 +45,13 @@ Choose the strongest concrete bar that an agent can actually inspect and compare
 
 Then write a short prompt for Claude Code or Codex in the style of Matt's prompt (minimal is better here, we want the agent to decide the specifics!).
 
-Give the lead agent the goal and the bar, but let it choose the approach. Tell it to divide the goal into the smallest pieces that can be improved and judged independently. For each important piece, it should fan out a builder and a separate critic with fresh context.
+Give the lead agent the goal and the bar, but let it choose the approach. Tell it to divide the goal into the smallest pieces that can be improved and judged independently. For each important piece, it should ask for a builder and a separate critic, each in a fresh session.
 
 Each critic must inspect the real output, compare it directly with the bar—using a blind A/B comparison when possible—identify the biggest remaining gap, and send it back for another round. Keep looping until our output wins or I stop the run.
 
 Have the lead agent keep the existing progress record current and send early playable previews and material decisions to the coordinator, following the owner visibility rules.
 
-Have it use subagents and ultracode. The lead agent runs on Fable at medium effort; the subagents and ultracode run on Sonnet at high effort. Do not prescribe the architecture, exact decomposition, or a fixed number of rounds. Keep the final prompt short, just like Matt's.
+The lead agent runs on Fable at medium effort and never writes code: it plans, leads and judges. Every builder and critic is a separate session on Sonnet at high effort, started by the coordinator from a self-contained brief (goal, files, acceptance check, branch), never a subagent inside the lead. Do not prescribe the architecture, exact decomposition, or a fixed number of rounds. Keep the final prompt short, just like Matt's.
 
 - `[GOAL]` is the game's one-line pitch and core loop, from the owner. `[OPTIONAL REFERENCES]` are the owner's reference
   games or screenshots, if any.
@@ -59,10 +59,13 @@ Have it use subagents and ultracode. The lead agent runs on Fable at medium effo
   limit travels with it: "Stop after N rounds and report the bar reached, the evidence and what is left", with N the
   slice rounds in Settings. That line wins over anything in the prompt about rounds.
 - The slice session runs where it can run and play the game: a cloud session with a headless browser when that is
-  enough, the owner's computer only when the slice needs a GPU or real input feel. Its builder and critic subagents
-  follow the Delegation rule and session limits; isolated review agents are also allowed elsewhere for required reviews.
-- The slice session is tracked like a stage: it reports to the coordinator, which keeps `progress.md`, one line per
-  piece finished. It counts as writing code.
+  enough, the owner's computer only when the slice needs a GPU or real input feel. Its builders and critics are separate
+  sessions that follow the Delegation rule and session limits; isolated review agents are also allowed elsewhere for
+  required reviews.
+- The slice lead is tracked like a stage: it reports to the coordinator, which keeps `progress.md`, one line per piece
+  finished. The lead writes no code (Fable never writes code); its builders count as writing code.
+- A first slice is not a small change for `visual-check`: its step 1 runs in a fresh session, never the one that built
+  the screens.
 
 ## From the slice to the game
 
