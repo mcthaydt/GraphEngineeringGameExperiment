@@ -229,7 +229,7 @@ describe('sim', () => {
     });
 
     it('does not climb a wall that is higher than a lip', () => {
-      sim = createSim({ ...lip, platforms: [lip.platforms[0]!, { ...lip.platforms[1]!, y: 1 }] }, tuning);
+      sim = createSim({ ...lip, platforms: lip.platforms.map((p, i) => (i === 1 ? { ...p, y: 1 } : p)) }, tuning);
       settle();
       run(120, forward);
       expect(sim.snapshot().z).toBeGreaterThan(-8.3);
