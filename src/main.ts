@@ -1,4 +1,5 @@
 import { startGame, type Game } from './index';
+import { showStartFailure } from './features/screens/failure';
 import './main.css';
 
 declare global {
@@ -24,7 +25,7 @@ startGame({
   },
   (error: unknown) => {
     console.error(error);
-    mount.innerHTML = '<p class="sorry">Sorry, the game could not start here.<br />Please try a newer browser, like Chrome.</p>';
+    showStartFailure(mount);
     document.body.dataset.ready = 'failed';
   },
 );

@@ -1,14 +1,15 @@
-export interface HudState {
+import type { HintView } from './hints';
+
+export interface HudState extends HintView {
   /** True once the flag is reached: shows "You made it!". */
   won: boolean;
-  /** Show the on-screen stick and jump button. */
+  /** Show the on-screen stick and jump button instead of the key hints. */
   touch: boolean;
-  /** The opening hints, each hidden once the player has done the thing. */
-  showMoveHint: boolean;
-  showJumpHint: boolean;
+  /** Goes up by one each time held controls are let go for the player (a win, a fall, Play again). */
+  letGo: number;
 }
 
 export function createHudState(touch: boolean): HudState {
-  const ui: HudState = $state({ won: false, touch, showMoveHint: true, showJumpHint: true });
+  const ui: HudState = $state({ won: false, touch, showMoveHint: true, showJumpHint: true, fell: false, letGo: 0 });
   return ui;
 }

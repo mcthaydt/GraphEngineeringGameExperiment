@@ -53,7 +53,7 @@ Last updated: 2026-11-16 17:26 UTC (written by the implementer for the coordinat
 | Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
 | Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
 
-## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 17:51 UTC)
+## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 18:39 UTC)
 
 Goal: run and jump across a short course of floating platforms to reach a flag. Falling puts you back at the start.
 Reaching the flag shows "You made it!" with one big "Play again" button.
@@ -70,7 +70,16 @@ within 10 seconds.
   (`platformer/slice/briefs/`). Builders work on their own branches off this one, with no pull request of their own.
 - Round 1 critics done: blind judge, look, screens. Their reports are in `platformer/slice/r1/critics/`. The blind
   judge picked ours as the amateur one easily; the biggest gap is how plain the ground and surroundings look.
-- Round 1 threads asked for: feel critic, world builder, hero and effects builder, screens builder.
+- Round 1 builders joined in so far (each its own thread and branch, merged with a merge commit): hero and effects
+  (`d02dd8d`), screens (`cdbfebf`), world (`80ac225`). Joined tip `01c79be`: lint, typecheck, 133 tests, build and
+  capture pass.
+- Setback: the joined game is too slow. `npm run measure` at `01c79be`: mean 19.10, 18.67, 18.86 ms, missed the
+  16.7 ms budget 3 of 3. The new hero and effects cost about 4.6 ms (measured before and after its merge); the world
+  about 1.5 ms; the screens nothing. A hero speed builder thread is fixing it.
+- Still running in round 1: hero speed builder, feel builder (respawn hitch, falls, camera closer, weight, course,
+  sound). The feel critic's report is in `platformer/slice/r1/critics/feel.md`.
+- Lead's choice, not yet owner-approved: a key still held after a fall keeps working; controls let go only on the win
+  and on "Play again".
 - Owner instruction (2026-11-16): Fable never writes code. Round 0 was written by the Fable lead before that rule.
 
 ### Slice: completed outcomes
