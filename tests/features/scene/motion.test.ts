@@ -3,17 +3,23 @@ import {
   arrivalBurst,
   bitLook,
   blink,
+  brake,
+  breath,
   cheerPose,
   cheerSparkles,
   confettiBurst,
   easeOutBack,
   FRAME,
   landingDust,
+  runPose,
   shadowLook,
+  skidDust,
   spring,
   stepBit,
+  stepBrake,
   stepSpring,
   stepTumble,
+  strideRate,
   takeoffDust,
   vanishBurst,
   type Bit,
@@ -261,5 +267,131 @@ describe('hero motion', () => {
     stepTumble(t, false, DT);
     expect(t.falling).toBe(0);
     expect(t.angle).toBe(0);
+  });
+});
+
+describe('the run seen from behind', () => {
+  it('has a cadence of 3 to 4 strides a second at top speed, slower when slower', () => {
+    expect(strideRate(7)).toBeGreaterThanOrEqual(3);
+    expect(strideRate(7)).toBeLessThanOrEqual(4);
+    expect(strideRate(3)).toBeLessThan(strideRate(7));
+    expect(strideRate(3)).toBeGreaterThan(0);
+  });
+
+  it('repeats every full stride', () => {
+    const a = runPose(0.37, 7);
+    const b = runPose(1.37, 7);
+    for (const key of Object.keys(a) as (keyof typeof a)[]) expect(a[key]).toBeCloseTo(b[key], 6);
+  });
+
+  it('rolls and sways from side to side with the step, as a wave', () => {
+    const left = runPose(0.25, 7);
+    const right = runPose(0.75, 7);
+    expect(left.roll).toBeCloseTo(0.12, 5);
+    expect(right.roll).toBeCloseTo(-0.12, 5);
+    expect(left.sway).toBeGreaterThanOrEqual(0.05);
+    expect(right.sway).toBeCloseTo(-left.sway, 5);
+    expect(left.yaw).toBeCloseTo(-right.yaw, 5);
+    expect(left.armSide).toBeGreaterThan(0.2);
+    expect(left.armSide).toBeCloseTo(-right.armSide, 5);
+    expect(runPose(0, 7).roll).toBeCloseTo(0, 5);
+  });
+
+  it('bounces twice a stride, as high as 0.12 m, and lifts each foot 0.25 m in turn', () => {
+    expect(runPose(0, 7).bob).toBeCloseTo(0.12, 5);
+    expect(runPose(0.5, 7).bob).toBeCloseTo(0.12, 5);
+    expect(runPose(0.25, 7).bob).toBeCloseTo(0, 5);
+    expect(runPose(0, 7).footLift).toBeCloseTo(0.25, 5);
+    // One foot rises, then the other: the rising foot swaps every half stride.
+    expect(runPose(0, 7).rise).toBeCloseTo(1, 5);
+    expect(runPose(0.5, 7).rise).toBeCloseTo(-1, 5);
+  });
+
+  it('keeps its shape at a walk but with smaller movements, and never flatter than a third', () => {
+    const walk = runPose(0.25, 2);
+    const run = runPose(0.25, 7);
+    expect(walk.roll).toBeLessThan(run.roll);
+    expect(walk.roll).toBeGreaterThanOrEqual(run.roll * 0.34);
+    expect(runPose(0.25, 20).roll).toBeCloseTo(run.roll, 5);
+  });
+});
+
+describe('breathing', () => {
+  it('rises and falls slowly by under 2 per cent', () => {
+    const values = Array.from({ length: 400 }, (_, i) => breath(i * 0.025));
+    expect(Math.max(...values)).toBeGreaterThan(0.015);
+    expect(Math.max(...values)).toBeLessThan(0.02);
+    expect(Math.min(...values)).toBeLessThan(-0.015);
+    expect(breath(0)).toBe(0);
+    expect(breath(1.3)).toBe(breath(1.3));
+  });
+});
+
+describe('braking', () => {
+  const drive = (b: ReturnType<typeof brake>, speeds: number[], grounded = true): void => {
+    for (const speed of speeds) stepBrake(b, speed, grounded, DT);
+  };
+
+  it('does nothing while running steadily or walking', () => {
+    const b = brake();
+    drive(b, [7, 7, 7, 7, 7, 7, 7, 7]);
+    drive(b, [6.8, 6.6, 6.4, 6.2, 6]);
+    const walk = brake();
+    drive(walk, [2, 2.2, 2.4, 2.4]);
+    expect(walk.count).toBe(0);
+    expect(b.count).toBe(0);
+    expect(b.tilt).toBeLessThan(0.01);
+  });
+
+  it('tips back and counts one skid when a run stops hard', () => {
+    const b = brake();
+    drive(b, [7, 7, 7, 5.5, 4, 2.5, 1, 0, 0, 0]);
+    expect(b.count).toBe(1);
+    expect(b.tilt).toBeGreaterThan(0.5);
+  });
+
+  it('counts a turn-around as a skid too, and one stop only once', () => {
+    const b = brake();
+    drive(b, [7, 7, 5.5, 4, 2.5, 1, 0, 1.5, 3, 4.5, 6, 7]);
+    expect(b.count).toBe(1);
+  });
+
+  it('stays upright in the air and when it was slow already', () => {
+    const air = brake();
+    drive(air, [7, 7, 7, 5.5, 4, 2.5, 1, 0], false);
+    expect(air.count).toBe(0);
+    const slow = brake();
+    drive(slow, [2.5, 1, 0, 0]);
+    expect(slow.count).toBe(0);
+  });
+
+  it('settles upright again a moment after the stop', () => {
+    const b = brake();
+    drive(b, [7, 5.5, 4, 2.5, 1, 0]);
+    drive(b, Array<number>(40).fill(0));
+    expect(b.tilt).toBeLessThan(0.02);
+  });
+
+  it('lets a second stop start another skid once the first is over', () => {
+    const b = brake();
+    drive(b, [7, 5.5, 4, 2.5, 1, 0]);
+    drive(b, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5, 3, 4.5, 6, 7, 7, 7]);
+    drive(b, [5.5, 4, 2.5, 1, 0]);
+    expect(b.count).toBe(2);
+  });
+});
+
+describe('skid dust', () => {
+  it('is two soft puffs near the feet, one each way, and the same every time', () => {
+    const bits = skidDust(1, 2, 3);
+    expect(bits).toHaveLength(2);
+    for (const b of bits) {
+      expect(b.kind).toBe('puff');
+      expect(Math.hypot(b.x - 1, b.z - 3)).toBeLessThan(0.6);
+      expect(b.y).toBeGreaterThan(2);
+      expect(b.y).toBeLessThan(2.5);
+    }
+    expect(Math.sign(bits[0]?.vx ?? 0)).toBe(-Math.sign(bits[1]?.vx ?? 0));
+    expect(skidDust(1, 2, 3)).toEqual(bits);
   });
 });
