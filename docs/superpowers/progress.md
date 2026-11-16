@@ -57,7 +57,7 @@ Last updated: 2026-11-16 19:27 UTC (written by the implementer for the coordinat
 | Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
 | Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
 
-## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 19:17 UTC)
+## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 19:47 UTC)
 
 Goal: run and jump across a short course of floating platforms to reach a flag. Falling puts you back at the start.
 Reaching the flag shows "You made it!" with one big "Play again" button.
@@ -69,7 +69,17 @@ within 10 seconds.
 
 ### Slice: current work
 
-- Round 1 of 3. The slice lead (Fable) only plans, briefs, judges and joins the work together. Every critic and
+- **Stopped by the owner during round 2 (2026-11-16: "Let's stop here", then "we can merge it all in and call it a
+  day"). The bar was not reached.** What merges is the joined round 1 game. Evidence at the stop: the round 2 blind
+  judge still picked ours as the amateur one, 97% sure (biggest gap: the hero seen from behind is a blob with one
+  pose); the round 2 look critic said about 60% (was 90%); the round 2 screens critic about 15%. The round 2 feel
+  critic had not reported. Reports: `platformer/slice/r2/critics/` in the shared project folder.
+- Not joined, left out on purpose: the world speed builder's unfinished branch (`claude/world-speed-r1`), and the
+  round 2 hero and screens builders (nothing finished). Round 3 never started.
+- Known open defects at the stop: frame time just over the budget (see below); a game file that fails to download
+  leaves "Getting ready" up forever; with no WebGL the game opens as an empty sky; `npm run measure` leaves its
+  preview server running, so stop it before the next run (`pkill -f "vite preview"`).
+- Round 1 of 3 (history). The slice lead (Fable) only plans, briefs, judges and joins the work together. Every critic and
   builder is its own Sonnet thread, started by the coordinator from a brief in the shared project folder
   (`platformer/slice/briefs/`). Builders work on their own branches off this one, with no pull request of their own.
 - Round 1 critics done: blind judge, look, screens. Their reports are in `platformer/slice/r1/critics/`. The blind
@@ -103,9 +113,9 @@ within 10 seconds.
 
 ### Slice: remaining
 
-- Rounds 1 to 3 of build, judge, fix. Then the report: bar reached, evidence, what is left.
-- Lane 2 review of the pull request by a fresh session, and the visual check, before it can merge.
-- Automatic screenshots and playtest video in CI: needs a change to `.github/` (lane 3), so it waits for the owner.
+- Nothing is in progress. The open defects and critic findings above are the starting list for the next milestone.
+- The lane 2 review by a fresh session and the visual check did not run: the owner asked to merge at the stop.
+- Automatic screenshots and playtest video in CI: needs a change to `.github/` (lane 3), the owner's call.
 
 ### Slice: blockers
 
@@ -114,7 +124,7 @@ within 10 seconds.
 ### Slice: previews
 
 - Screenshot gallery, updated each round: https://claude.ai/artifact/AU49SLB3f6zpMbt3H1P5iu (private to the owner).
-- Draft pull request #3. Local: `npm run dev`, or `npm run build && npm run preview`.
+- Pull request #3. Local: `npm run dev`, or `npm run build && npm run preview`.
 - No public preview link exists; publishing one needs the owner's permission.
 
 ### Slice: decisions
