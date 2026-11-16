@@ -134,7 +134,7 @@ reports into one owner-facing update. Otherwise the implementer handles these du
   whenever they help; CI is the merge gate. A failing test blocks only the change that touches it: report an unrelated
   failure, and give a failure on `main` its own thread. A merge still needs every required check green, unless the
   owner authorizes an exception named in the pull request. A test that fails once and passes on retry is a defect:
-  report it with its text. Never loosen, skip or re-record a test to hide a defect. No `--pass-with-no-tests` or similar flag that
+  report it with its text and record it under "Flaky tests" in `docs/superpowers/history.md`. Never loosen, skip or re-record a test to hide a defect. No `--pass-with-no-tests` or similar flag that
   lets an empty suite pass in CI. Updating a golden for an approved
   behavior change is fine, with its before and after shown. A docs change or a purely visual change is verified by
   what fits (a link or build check, the approved look), not by an invented unit test.
@@ -330,7 +330,7 @@ Change a number or a model here and nowhere else.
   writes where things stand to `progress.md` first.
 - Browser test pieces in CI: 6. Device matrix: small phone, tablet, computer, as browser profiles (emulation evidence);
   a brief may change it. Progress: the coordinator keeps each stage's row in `progress.md` up to date, with a percentage
-  from the plan's ticked steps, as supporting information. Rule edits: batched into one rule-change pull request per slice, from the retro.
+  from the plan's ticked steps, as supporting information. Rule edits the retro proposes: batched into one rule-change pull request per slice. The owner's own rule requests keep their own pull requests.
 - Slice rounds: 3 (a round is build, judge, fix), then stop and report; the slice's builders and critics count toward
   the work-session limit.
 - Audits by lane: lane 1 none; lane 2 one fresh review of the change, after the build; lane 3 a plan audit and an
