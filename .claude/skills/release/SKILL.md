@@ -9,11 +9,10 @@ description: Use when opening a pull request, waiting on checks, merging, deleti
 
 The first session in a repo runs this first, before it builds anything, and again when the CI, the runtime or the
 superpowers version changes. It verifies each item, sets up what is missing with the owner's authorization (CI workflow
-files are lane 3 after the first setup; bootstrapping from the owner's own rules text is lane 2, and the owner's request
-is the standing permission for this check), and reports each one as present, added or missing. Before building, it
-lists every step only the owner can run (creating the repo, branch protection, deleting branches and the like) as one
-batch of CLI commands, so the owner is not needed mid-run:
+files are lane 3, except at first-time setup: see Risk in CLAUDE.md), and reports each one as present, added or missing:
 
+- Every step only the owner can run (creating the repo, branch protection, deleting branches, credentials), listed as
+  one batch of CLI commands before building, so the owner is not needed mid-run.
 - The commands in Stack and checks (CLAUDE.md) run, and pass on `main`.
 - The CI gate described below: the workflow triggers (with `ready_for_review` on a public repo), the job that decides
   which checks apply, and the final aggregate gate job.
@@ -45,9 +44,6 @@ Choose where work runs by what it needs, not by habit.
 
 ## Fast CI (public repos on GitHub's runners)
 
-- No `--pass-with-no-tests` or similar flags that let an empty suite pass in CI.
-- `gh pr create` can add a "Generated with Claude Code" footer by itself. Check the PR body's last line after every
-  edit: it must be "Requested by **The Realest Alive**".
 - Open every pull request as a draft; the implementer marks it ready for review as its last step, after its final push.
   Private repos use no draft rule.
 - A draft gets a quick run: lint, typecheck and build in full, but only the tests the change reaches, stopping at the

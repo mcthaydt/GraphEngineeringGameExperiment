@@ -13,10 +13,8 @@ work and known defects. The owner still gives final acceptance once, as part of 
 
 A small change (a copy fix, one screen) gets step 1 only, and the session that made it looks, fixes what it finds and
 looks again. No findings means no fix round. For a set of screens or a slice, fresh review sessions find the problems
-and the session that built the screens fixes them, with everything in one pull request.
-
-A first slice is never a small change. Its step 1 runs in a fresh session, not the one that built the screens, even when
-the slice has only one or two screens.
+and the session that built the screens fixes them, with everything in one pull request. A slice, the first one
+included, is never a small change: fresh sessions run every step, even when it has one screen.
 
 ## Before the next slice
 

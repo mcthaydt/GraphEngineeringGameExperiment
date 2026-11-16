@@ -20,7 +20,7 @@ grows one milestone at a time from the slice, which evolves by default.
 - Perform needed setup on a branch, adding only missing project structure and tracking files:
   `docs/superpowers/progress.md`, `history.md` and `docs/superpowers/roadmap.md`. Reuse suitable existing setup and run
   the `release` setup check. CI workflow changes retain lane 3 checks and require explicit or applicable standing
-  permission. Merge required setup changes before the slice starts; skip a setup pull request when nothing changes.
+  permission, except at first-time setup (see Risk in CLAUDE.md). Merge required setup changes before the slice starts; skip a setup pull request when nothing changes.
 
 ## Making the slice
 
@@ -60,12 +60,9 @@ The lead agent runs on Fable at medium effort and never writes code: it plans, l
   slice rounds in Settings. That line wins over anything in the prompt about rounds.
 - The slice session runs where it can run and play the game: a cloud session with a headless browser when that is
   enough, the owner's computer only when the slice needs a GPU or real input feel. Its builders and critics are separate
-  sessions that follow the Delegation rule and session limits; isolated review agents are also allowed elsewhere for
-  required reviews.
+  threads that follow the Delegation rule and session limits; required reviews are separate threads too.
 - The slice lead is tracked like a stage: it reports to the coordinator, which keeps `progress.md`, one line per piece
   finished. The lead writes no code (Fable never writes code); its builders count as writing code.
-- A first slice is not a small change for `visual-check`: its step 1 runs in a fresh session, never the one that built
-  the screens.
 
 ## From the slice to the game
 
