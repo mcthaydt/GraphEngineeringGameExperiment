@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-11-16 18:18 UTC (written by the implementer for the coordinator, which cannot write to the repo)
+Last updated: 2026-11-16 18:31 UTC (written by the implementer for the coordinator, which cannot write to the repo)
 
 ## Active milestone: setup, then milestone 0 (the vertical slice)
 
@@ -27,9 +27,9 @@ Last updated: 2026-11-16 18:18 UTC (written by the implementer for the coordinat
 - Delete the merged branch `setup/project-rules` (owner CLI step; still present at 16:33 UTC).
 - Delete the merged branch `claude/project-thread-diycz9` after this docs pull request merges (owner CLI step:
   `git push origin --delete claude/project-thread-diycz9`).
-- Owner decision on removing `--passWithNoTests` from `.github/workflows/ci.yml` (lines 87, 118, 119). The owner said
-  yes, but the repo has 1 browser test file for 6 shards, so removal turns CI red; a decision card is open with a
-  recommendation (separate follow-up pull request once there are enough browser tests).
+- `--passWithNoTests` in `.github/workflows/ci.yml` (lines 87, 118, 119): decided (owner, decision card, 18:30 UTC):
+  separate lane 3 PR after the slice, once there are at least 6 browser test files or the shards are cut to match; it
+  needs its own fresh review. Until then CI keeps the flag (1 browser test file for 6 shards today).
 
 ### Blockers
 
