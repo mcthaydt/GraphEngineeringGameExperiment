@@ -68,5 +68,5 @@ ACCEPTED: utils slice merged, green on the first try.
 DERIVED: adapters keep keyword arguments exactly.
 LANDS IN: the plan's brief for every later slice.
 
-A lesson lands in the plan's brief, not in a worker's instructions. The next rule-edit session moves each into
-CLAUDE.md.
+A lesson lands in the plan's brief, not in a worker's instructions. The retro after the slice moves each into
+CLAUDE.md, or turns it into a test.

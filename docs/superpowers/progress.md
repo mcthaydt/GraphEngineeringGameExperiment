@@ -1,12 +1,15 @@
 # Progress
 
-Last updated: 2026-11-16 17:26 UTC (written by the implementer for the coordinator, which cannot write to the repo)
+Last updated: 2026-11-16 19:27 UTC (written by the implementer for the coordinator, which cannot write to the repo)
 
 ## Active milestone: setup, then milestone 0 (the vertical slice)
 
 ### Current work
 
 - Milestone 0, the vertical slice, running in its own session (prompt: blind A/B bar, 60 fps, keyboard and touch).
+- Rules change PR #7 merged (af07cb3); a follow-up rules change cuts the CLAUDE.md "Fable orchestrates" bullet and keeps
+  the `vertical-slice` Gauntlet wording. The slice resumes from round 0 with a Fable lead that briefs Sonnet builder and
+  critic threads.
 
 ### Completed outcomes
 
@@ -20,15 +23,14 @@ Last updated: 2026-11-16 17:26 UTC (written by the implementer for the coordinat
 ### Remaining
 
 - Finish the vertical slice, including CI screenshots and playtest video.
+- Retro after the slice (and after every slice): a fresh thread turns lessons into tests and proposes one rule-change PR.
 - Agree the delivery order after the slice.
 - Delete the merged branch `setup/project-rules` (owner CLI step; still present at 16:33 UTC).
 - Delete the merged branch `claude/project-thread-diycz9` after this docs pull request merges (owner CLI step:
   `git push origin --delete claude/project-thread-diycz9`).
-- Owner decision on removing `--passWithNoTests` from `.github/workflows/ci.yml` (lines 87, 118, 119). The owner said
-  yes, but the repo has 1 browser test file for 6 shards, so removal turns CI red; a decision card is open with a
-  recommendation (separate follow-up pull request once there are enough browser tests).
-- Owner may reshape the vertical-slice workflow (one Sonnet implementer plus parallel fresh review threads); not
-  started, waits for the coordinator.
+- `--passWithNoTests` in `.github/workflows/ci.yml` (lines 87, 118, 119): decided (owner, decision card, 18:30 UTC):
+  separate lane 3 PR after the slice, once there are at least 6 browser test files or the shards are cut to match; it
+  needs its own fresh review. Until then CI keeps the flag (1 browser test file for 6 shards today).
 
 ### Blockers
 
@@ -50,6 +52,8 @@ Last updated: 2026-11-16 17:26 UTC (written by the implementer for the coordinat
 | Setup PR #1 ran on the short path though it is lane 3: no spec and no plan audit; a fresh implementation audit ran (`audits/2026-11-16-1-implementation-audit.md`) | Agent (deviation) | Owner accepted it (decision card, 16:29 UTC). |
 | PR #4 wording: the owner's apps rules text wherever it matched the eight findings; a slice is never a small change for `visual-check` | Owner (message, 2026-11-16 17:15 UTC) | Replaced the implementer's first wording after the cycle 2 audit failed it. |
 | PR #4 ran lane 3 with two fresh audits instead of a spec and plan audit | Agent (deviation) | The owner's attached messages were the approval; an isolated subagent ran the first audit, threads ran the rest. |
+| The lead orchestrates and the coordinator starts each builder and critic as its own Sonnet-high thread (`vertical-slice` Gauntlet prompt); run B cut, its brief removed | Owner (messages, 2026-11-16 17:45, 17:48 and 18:17 UTC) | The CLAUDE.md "Fable orchestrates" bullet was added by PR #7 and cut again at the owner's word (18:17 UTC). After the slice the normal flow runs: plan Fable, plan audit Opus, execution Sonnet high, implementation audit Opus, advisor Fable. |
+| Self-improving retro after every slice, replacing "rule edits batched into one session a day" | Owner (message, 2026-11-16 19:21 UTC) | A fresh thread reads the slice's audits, flaky tests and repeat fixes; lessons become tests where possible; the rest is one lane 3 rule-change PR for the owner. |
 | Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
 | Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
 
