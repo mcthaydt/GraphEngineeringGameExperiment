@@ -4,8 +4,11 @@
 radius = 0.4
 height = 1.1
 run_speed = 7.0
-ground_accel = 70.0
-ground_brake = 90.0
+# A short run-up and a short slide: the hero has weight but still answers at once.
+ground_accel = 32.0
+ground_brake = 40.0
+# Pushing the other way from a run: quicker than braking, so a turn never feels stuck.
+ground_turn = 64.0
 air_accel = 38.0
 jump_speed = 11.5
 gravity = 30.0
@@ -13,19 +16,26 @@ fall_gravity = 44.0
 # Letting go of jump early keeps this share of the upward speed: a tap is a hop, a hold is a leap.
 jump_cut = 0.45
 max_fall_speed = 28.0
+# How far below where it last stood the hero has dropped when the fall sound plays, and when it is put back at the start.
+drop_depth = 0.8
+fall_depth = 4.0
 # Grace after walking off an edge, and memory of a jump pressed just before landing.
-coyote_ms = 110
-jump_buffer_ms = 130
+coyote_ms = 140
+jump_buffer_ms = 170
 
 [camera]
 fov = 50.0
-back = 9.5
-up = 5.6
+back = 7.5
+up = 4.6
 look_ahead = 2.5
 look_up = 0.8
 # Higher follows the player more tightly (per second).
 follow = 6.0
-follow_height = 3.0
+follow_height = 5.0
+# Seconds of running speed the camera looks ahead by.
+lead = 0.15
+# The camera follows a fall down no further than this below where the hero last stood, so the fall stays in view.
+fall_follow = 0.5
 
 [goal]
 reach = 1.3

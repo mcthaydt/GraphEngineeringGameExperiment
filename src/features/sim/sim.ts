@@ -19,6 +19,9 @@ export const IDLE: Intent = { moveX: 0, moveZ: 0, jump: false };
 export type SimEvent =
   | { readonly type: 'jump' }
   | { readonly type: 'land'; readonly speed: number }
+  /** The hero has dropped off the course and is still falling: the moment for the fall sound. */
+  | { readonly type: 'drop' }
+  /** The fall is over and the hero is back at the start. */
   | { readonly type: 'fall' }
   | { readonly type: 'win' };
 
@@ -49,6 +52,8 @@ export interface Sim {
 // Keeps the capsule a hair off surfaces so it never tunnels or snags.
 const SKIN = 0.02;
 const SHADOW_REACH = 40;
+// A hard landing is felt and heard; touching down from a step or the spawn is not.
+const LANDING_MIN_SPEED = 3;
 
 export function createSim(course: Course, tuning: Tuning): Sim {
   const { player: t } = tuning;
@@ -75,11 +80,25 @@ export function createSim(course: Course, tuning: Tuning): Sim {
   const collider = physics.createCollider(RAPIER.ColliderDesc.capsule(halfHeight - t.radius, t.radius), body);
   const controller = physics.createCharacterController(SKIN);
   controller.setSlideEnabled(true);
+  // Without this, pushing a capsule down into flat ground now and then makes the controller drop the whole sideways move.
+  controller.enableSnapToGround(0.1);
   physics.step();
 
-  const coyoteSteps = msToSteps(t.coyote_ms);
-  const bufferSteps = msToSteps(t.jump_buffer_ms);
+  // A window that opens on one step and is read on the next lasts a step short, and the ground is seen a step after it
+  // is reached: the extra steps make each last as long as the setting says.
+  const coyoteSteps = msToSteps(t.coyote_ms) + 1;
+  const bufferSteps = msToSteps(t.jump_buffer_ms) + 2;
   const down = { x: 0, y: -1, z: 0 };
+  // Where the hero last stood: a fall is measured from here, so it takes as long from any platform.
+  let standingY = course.start.y;
+  let dropped = false;
+
+  /** Distance down to the ground from the middle of the body, or null if there is none within `reach`. */
+  function groundBelow(pos: { x: number; y: number; z: number }, reach: number): number | null {
+    const origin = { x: pos.x, y: pos.y + halfHeight, z: pos.z };
+    const hit = physics.castRay(new RAPIER.Ray(origin, down), halfHeight + reach, true, undefined, undefined, collider);
+    return hit ? hit.timeOfImpact - halfHeight : null;
+  }
 
   function place(x: number, y: number, z: number): void {
     hero.set(Position, { x, y, z });
@@ -91,7 +110,10 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     const s = startAt();
     place(s.x, s.y, s.z);
     hero.set(Velocity, { x: 0, y: 0, z: 0 });
-    hero.set(Hero, { grounded: false, facing: Math.PI, coyote: 0, jumpBuffer: 0, jumpHeld: false, rising: false });
+    // Starting on the ground, so the first step is a normal step from rest and not a landing.
+    hero.set(Hero, { grounded: true, facing: Math.PI, coyote: coyoteSteps, jumpBuffer: 0, jumpHeld: false, rising: false });
+    standingY = s.y;
+    dropped = false;
     physics.step();
   }
 
@@ -108,7 +130,9 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     const scale = length > 1 ? 1 / length : 1;
     const targetX = want.moveX * scale * t.run_speed;
     const targetZ = want.moveZ * scale * t.run_speed;
-    const accel = !h.grounded ? t.air_accel : length > 0.01 ? t.ground_accel : t.ground_brake;
+    // Pushing against the way it is going turns faster than a plain start, so a turn never feels stuck.
+    const against = vel.x * targetX + vel.z * targetZ < 0;
+    const accel = !h.grounded ? t.air_accel : length <= 0.01 ? t.ground_brake : against ? t.ground_turn : t.ground_accel;
     vel.x = approach(vel.x, targetX, accel * STEP_SECONDS);
     vel.z = approach(vel.z, targetZ, accel * STEP_SECONDS);
     if (length > 0.01) h.facing = Math.atan2(want.moveX, want.moveZ);
@@ -122,8 +146,7 @@ export function createSim(course: Course, tuning: Tuning): Sim {
       h.jumpBuffer = 0;
       h.rising = true;
       events.push({ type: 'jump' });
-    }
-    if (h.rising && !want.jump && vel.y > 0) {
+    } else if (h.rising && !want.jump && vel.y > 0) {
       vel.y *= t.jump_cut;
       h.rising = false;
     }
@@ -133,12 +156,18 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     vel.y -= (vel.y > 0 ? t.gravity : t.fall_gravity) * STEP_SECONDS;
     vel.y = Math.max(vel.y, -t.max_fall_speed);
 
-    const wanted = { x: vel.x * STEP_SECONDS, y: vel.y * STEP_SECONDS, z: vel.z * STEP_SECONDS };
+    // On the ground the controller keeps the feet down itself: pushing into the floor as well is what made it stall.
+    const standing = h.grounded && vel.y <= 0;
+    const wanted = { x: vel.x * STEP_SECONDS, y: standing ? 0 : vel.y * STEP_SECONDS, z: vel.z * STEP_SECONDS };
     controller.computeColliderMovement(collider, wanted);
     const moved = controller.computedMovement();
     const wasGrounded = h.grounded;
     const impact = -vel.y;
-    h.grounded = controller.computedGrounded() && vel.y <= 0;
+    pos.x += moved.x;
+    pos.y += moved.y;
+    pos.z += moved.z;
+    // Resting on a platform's lip with the middle of the body in the air is not standing: it slides off instead of hovering.
+    h.grounded = controller.computedGrounded() && vel.y <= 0 && groundBelow(pos, 0.3) !== null;
 
     // A blocked axis loses its speed, so the player does not stick to or grind along what it hit.
     if (Math.abs(moved.x - wanted.x) > 1e-5) vel.x = moved.x / STEP_SECONDS;
@@ -146,21 +175,27 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     if (vel.y > 0 && moved.y < wanted.y - 1e-5) vel.y = 0;
     if (h.grounded) {
       vel.y = 0;
-      if (!wasGrounded) events.push({ type: 'land', speed: impact });
+      if (!wasGrounded && impact > LANDING_MIN_SPEED) events.push({ type: 'land', speed: impact });
       h.coyote = coyoteSteps;
+      standingY = pos.y;
+      dropped = false;
     } else {
       h.coyote = Math.max(0, h.coyote - 1);
     }
 
-    pos.x += moved.x;
-    pos.y += moved.y;
-    pos.z += moved.z;
     hero.set(Velocity, vel);
     hero.set(Hero, h);
     place(pos.x, pos.y, pos.z);
     physics.step();
 
-    if (pos.y < course.fall_y) {
+    // A drop only counts where there is nothing below to land on.
+    const lost = pos.y < standingY - t.drop_depth && groundBelow(pos, SHADOW_REACH) === null;
+    if (lost && !dropped) {
+      dropped = true;
+      events.push({ type: 'drop' });
+    }
+    if (pos.y < course.fall_y || (lost && pos.y < standingY - t.fall_depth)) {
+      if (!dropped) events.push({ type: 'drop' });
       events.push({ type: 'fall' });
       toStart();
       if (playing) world.set(Run, { ...run, falls: run.falls + 1, steps: run.steps + 1 });

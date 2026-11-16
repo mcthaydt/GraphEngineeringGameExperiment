@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadFirstCourse, type Course } from '../../../src/features/course/course';
+import { loadFirstCourse, platformUnder, type Course } from '../../../src/features/course/course';
 import { createSim, IDLE, type Intent, type Sim, type SimEvent } from '../../../src/features/sim/sim';
 import { loadTuning } from '../../../src/features/tuning/tuning';
+import { msToSteps } from '../../../src/lib/steps';
+import { createAutopilot } from '../../playtest/autopilot';
 
 const tuning = loadTuning();
 const flat: Course = {
@@ -123,5 +125,263 @@ describe('sim', () => {
     };
     sim = createSim(flat, tuning);
     expect(play()).toEqual(play());
+  });
+
+  describe('after a respawn', () => {
+    // The first frames after a restart or a fall must feel like any other start from rest.
+    const speeds = (idle: number): number[] => {
+      sim = createSim(loadFirstCourse(), tuning);
+      run(idle, IDLE);
+      return Array.from({ length: 12 }, () => {
+        sim.step(forward);
+        return Math.abs(sim.snapshot().vz);
+      });
+    };
+
+    it('never loses speed while forward is held, whatever the wait before it', () => {
+      for (const idle of [0, 1, 2, 3, 5, 8, 12, 20, 33, 60]) {
+        const v = speeds(idle);
+        v.forEach((speed, i) => expect(speed, `idle ${idle}, step ${i}`).toBeGreaterThanOrEqual((v[i - 1] ?? 0) - 1e-6));
+        if (idle !== 60) sim.dispose();
+      }
+    });
+
+    it('keeps accelerating after a fall with forward held, and a restart too', () => {
+      sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
+      settle();
+      let fell = false;
+      for (let i = 0; i < 400 && !fell; i++) fell = sim.step(forward).some((e) => e.type === 'fall');
+      let last = 0;
+      for (let i = 0; i < 12; i++) {
+        sim.step(forward);
+        const v = Math.abs(sim.snapshot().vz);
+        expect(v, `step ${i} after the fall`).toBeGreaterThanOrEqual(last - 1e-6);
+        last = v;
+      }
+      sim.restart();
+      last = 0;
+      for (let i = 0; i < 12; i++) {
+        sim.step(forward);
+        const v = Math.abs(sim.snapshot().vz);
+        expect(v, `step ${i} after the restart`).toBeGreaterThanOrEqual(last - 1e-6);
+        last = v;
+      }
+    });
+
+    it('does not count the start as a landing', () => {
+      sim = createSim(flat, tuning);
+      expect(run(30, IDLE).map((e) => e.type)).toEqual([]);
+      sim.restart();
+      expect(run(30, IDLE).map((e) => e.type)).toEqual([]);
+    });
+  });
+
+  describe('edges', () => {
+    it('lets go of the ground once the middle of the body is past the edge', () => {
+      sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
+      settle();
+      // One tap at a time, so the player creeps to the edge at z = -10.
+      let lastGroundedZ = 0;
+      for (let i = 0; i < 400; i++) {
+        run(4, forward);
+        run(3, IDLE);
+        const s = sim.snapshot();
+        if (!s.grounded) break;
+        lastGroundedZ = s.z;
+      }
+      expect(lastGroundedZ).toBeLessThan(-8);
+      expect(lastGroundedZ).toBeGreaterThan(-10.15);
+    });
+
+    it('lets go of a corner the same way', () => {
+      sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
+      settle();
+      // Walk to the back right corner (x = 3, z = 2) in small steps, then past it.
+      let lastGrounded = { x: 0, z: 0 };
+      for (let i = 0; i < 600; i++) {
+        run(4, { moveX: 0.5, moveZ: 0.5, jump: false });
+        run(2, IDLE);
+        const s = sim.snapshot();
+        if (!s.grounded) break;
+        lastGrounded = { x: s.x, z: s.z };
+      }
+      expect(lastGrounded.x).toBeLessThan(3.15);
+      expect(lastGrounded.z).toBeLessThan(2.15);
+    });
+  });
+
+  describe('jump timing', () => {
+    const edgeOf = (): number => {
+      sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
+      settle();
+      let i = 0;
+      while (sim.snapshot().grounded && i++ < 300) sim.step(forward);
+      return i;
+    };
+
+    it('still jumps for as long as the coyote time says, and not a step longer', () => {
+      const steps = msToSteps(tuning.player.coyote_ms);
+      // `late` counts steps after the one that left the ground: 1 is the very next step.
+      for (const late of [steps, steps + 1]) {
+        edgeOf();
+        run(late - 1, forward);
+        const jumped = sim.step({ ...forward, jump: true }).some((e) => e.type === 'jump');
+        expect(jumped, `${late} steps after the ground was lost`).toBe(late === steps);
+        if (late === steps) sim.dispose();
+      }
+    });
+
+    // Press jump `early` steps before the step the landing happens in, then see whether a second jump starts.
+    const bufferedJump = (early: number, hold: boolean): { jumped: boolean; apex: number } => {
+      sim = createSim(flat, tuning);
+      settle();
+      let air = 0;
+      run(1, { moveX: 0, moveZ: 0, jump: true });
+      while (!sim.snapshot().grounded && air++ < 200) sim.step(IDLE);
+      sim.dispose();
+      // `air` steps after the first jump the landing happens; replay and press again `early` steps before it.
+      sim = createSim(flat, tuning);
+      settle();
+      sim.step({ moveX: 0, moveZ: 0, jump: true });
+      for (let i = 1; i < air - early; i++) sim.step(IDLE);
+      let jumped = false;
+      let apex = 0;
+      for (let i = 0; i < 60; i++) {
+        const events = sim.step({ moveX: 0, moveZ: 0, jump: hold ? i < 30 : i === 0 });
+        if (i > 0 || early === 0) jumped ||= events.some((e) => e.type === 'jump');
+        apex = Math.max(apex, sim.snapshot().y);
+      }
+      return { jumped, apex };
+    };
+
+    it('remembers a jump pressed just before landing, for as long as the buffer time says', () => {
+      const steps = msToSteps(tuning.player.jump_buffer_ms);
+      expect(bufferedJump(steps, false).jumped).toBe(true);
+      sim.dispose();
+      expect(bufferedJump(steps + 3, false).jumped).toBe(false);
+    });
+
+    it('does not cut a buffered tap on its first step: it hops as high as a tap on the ground', () => {
+      const buffered = bufferedJump(3, false);
+      sim.dispose();
+      sim = createSim(flat, tuning);
+      settle();
+      let tap = 0;
+      for (let i = 0; i < 60; i++) {
+        sim.step({ moveX: 0, moveZ: 0, jump: i === 0 });
+        tap = Math.max(tap, sim.snapshot().y);
+      }
+      expect(buffered.apex).toBeGreaterThan(tap * 0.9);
+    });
+  });
+
+  describe('falling', () => {
+    // The course's own floor for falling is far below: the player is put back by how far it has dropped, not by that floor.
+    const bottomless: Course = { ...flat, fall_y: -9, flag: { x: 0, y: 0, z: -30 } };
+    const fallOff = (): { drop: number; fall: number; left: number } => {
+      sim = createSim(bottomless, tuning);
+      settle();
+      let left = -1;
+      let drop = -1;
+      let fall = -1;
+      for (let i = 0; i < 400 && fall < 0; i++) {
+        const events = sim.step(forward);
+        if (left < 0 && !sim.snapshot().grounded) left = i;
+        if (events.some((e) => e.type === 'drop')) drop = i;
+        if (events.some((e) => e.type === 'fall')) fall = i;
+      }
+      return { drop, fall, left };
+    };
+
+    it('says the player is dropping while it is still falling, before the cut back to the start', () => {
+      const { drop, fall, left } = fallOff();
+      expect(drop).toBeGreaterThan(left);
+      expect(fall - drop).toBeGreaterThanOrEqual(8);
+    });
+
+    it('cuts back to the start within half a second of leaving the edge', () => {
+      const { fall, left } = fallOff();
+      expect(fall - left).toBeLessThanOrEqual(30);
+    });
+
+    it('says dropping only once per fall', () => {
+      sim = createSim(bottomless, tuning);
+      settle();
+      const events = run(200, forward).filter((e) => e.type === 'drop');
+      expect(events).toHaveLength(1);
+    });
+  });
+
+  describe('weight', () => {
+    const stepsToSpeed = (): number => {
+      sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
+      settle();
+      let n = 0;
+      while (Math.abs(sim.snapshot().vz) < tuning.player.run_speed - 1e-3 && n < 100) {
+        sim.step(forward);
+        n++;
+      }
+      return n;
+    };
+
+    it('takes a short run-up to full speed: between 0.15 and 0.3 seconds', () => {
+      const n = stepsToSpeed();
+      expect(n).toBeGreaterThanOrEqual(9);
+      expect(n).toBeLessThanOrEqual(18);
+    });
+
+    it('slides a short way to a stop: between 0.12 and 0.25 seconds', () => {
+      stepsToSpeed();
+      let n = 0;
+      while (Math.abs(sim.snapshot().vz) > 1e-3 && n < 100) {
+        sim.step(IDLE);
+        n++;
+      }
+      expect(n).toBeGreaterThanOrEqual(8);
+      expect(n).toBeLessThanOrEqual(15);
+    });
+
+    it('turns round in under a third of a second', () => {
+      stepsToSpeed();
+      let n = 0;
+      while (sim.snapshot().vz < tuning.player.run_speed - 1e-3 && n < 100) {
+        sim.step({ moveX: 0, moveZ: 1, jump: false });
+        n++;
+      }
+      expect(n).toBeLessThanOrEqual(20);
+    });
+  });
+
+  describe('the first course', () => {
+    const course = loadFirstCourse();
+    const play = (wish: (s: ReturnType<Sim['snapshot']>, edge: boolean) => Intent): { won: boolean; falls: number } => {
+      sim = createSim(course, tuning);
+      let falls = 0;
+      for (let i = 0; i < 60 * 60 && sim.snapshot().phase !== 'won'; i++) {
+        const s = sim.snapshot();
+        const ahead = platformUnder(course, s.x, s.z - 0.9);
+        sim.step(wish(s, !ahead || ahead.y > s.y + 0.2));
+        falls = sim.snapshot().falls;
+      }
+      return { won: sim.snapshot().phase === 'won', falls };
+    };
+
+    it('is won by the autopilot, which steers and jumps', () => {
+      const pilot = createAutopilot(course);
+      const result = play((s) => {
+        const w = pilot(s);
+        return { moveX: (w.right ? 1 : 0) - (w.left ? 1 : 0), moveZ: (w.down ? 1 : 0) - (w.up ? 1 : 0), jump: w.jump };
+      });
+      expect(result.won).toBe(true);
+    });
+
+    it('is not won by only holding forward and holding jump at every edge', () => {
+      // It steers sideways toward the next platform, as a new player would, but never lets go of forward or jump.
+      const result = play((s, edge) => {
+        const next = course.platforms.find((p) => p.z < s.z - 1) ?? course.flag;
+        return { moveX: Math.sign(next.x - s.x) * (Math.abs(next.x - s.x) > 0.35 ? 1 : 0), moveZ: -1, jump: (s.grounded && edge) || (!s.grounded && s.vy > 0) };
+      });
+      expect(result.won).toBe(false);
+    });
   });
 });
