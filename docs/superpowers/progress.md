@@ -53,7 +53,7 @@ Last updated: 2026-11-16 17:26 UTC (written by the implementer for the coordinat
 | Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
 | Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
 
-## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 18:39 UTC)
+## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 19:17 UTC)
 
 Goal: run and jump across a short course of floating platforms to reach a flag. Falling puts you back at the start.
 Reaching the flag shows "You made it!" with one big "Play again" button.
@@ -70,14 +70,18 @@ within 10 seconds.
   (`platformer/slice/briefs/`). Builders work on their own branches off this one, with no pull request of their own.
 - Round 1 critics done: blind judge, look, screens. Their reports are in `platformer/slice/r1/critics/`. The blind
   judge picked ours as the amateur one easily; the biggest gap is how plain the ground and surroundings look.
-- Round 1 builders joined in so far (each its own thread and branch, merged with a merge commit): hero and effects
-  (`d02dd8d`), screens (`cdbfebf`), world (`80ac225`). Joined tip `01c79be`: lint, typecheck, 133 tests, build and
-  capture pass.
-- Setback: the joined game is too slow. `npm run measure` at `01c79be`: mean 19.10, 18.67, 18.86 ms, missed the
-  16.7 ms budget 3 of 3. The new hero and effects cost about 4.6 ms (measured before and after its merge); the world
-  about 1.5 ms; the screens nothing. A hero speed builder thread is fixing it.
-- Still running in round 1: hero speed builder, feel builder (respawn hitch, falls, camera closer, weight, course,
-  sound). The feel critic's report is in `platformer/slice/r1/critics/feel.md`.
+- Round 1 builders, each its own thread and branch, merged with merge commits: hero and effects (`d02dd8d`), screens
+  (`cdbfebf`), world (`80ac225`), hero speed (`8e2f040`), feel (`55b8e5e`). Joined tip `ff0e2d0`: lint, typecheck,
+  184 tests, build and capture pass.
+- Speed, measured, not yet inside the budget: `npm run measure` at `ff0e2d0` gave mean 16.92, 16.87, 16.79 ms, missed
+  the 16.7 ms budget 3 of 3. The hero fix worked (about 0.1 ms now). The world costs about 2.5 to 3 ms against a
+  1.5 ms allowance. A world speed builder thread is running; it also fixes the measure script leaving its server up.
+  Hosts differ a lot (the same commit read 10 to 16 ms uncapped on different hosts), so only alternating runs on one
+  host are compared.
+- Round 2 critic briefs written (blind judge, look, screens, feel) in `platformer/slice/briefs/`.
+- Agent-selected choices in round 1, not owner-approved: hero's second colour is violet; camera moved closer; the
+  last part of the course is harder (a stone hop and a longest leap); the course test lets the last gap use up to
+  0.95 of a held jump's reach (it uses 0.77), every other gap 0.75.
 - Lead's choice, not yet owner-approved: a key still held after a fall keeps working; controls let go only on the win
   and on "Play again".
 - Owner instruction (2026-11-16): Fable never writes code. Round 0 was written by the Fable lead before that rule.
