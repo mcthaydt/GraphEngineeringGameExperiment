@@ -4,6 +4,7 @@ import type { Course } from '../course/course';
 import type { SimEvent, Snapshot } from '../sim/sim';
 import type { Tuning } from '../tuning/tuning';
 import { SUN_FROM } from './baked';
+import { createBackdrop } from './backdrop';
 import { createCameraRig } from './camera';
 import { createEffects } from './effects';
 import { createFlag } from './flag';
@@ -34,7 +35,7 @@ export function createScene(course: Course, tuning: Tuning): Scene {
   const hero = createHero();
   const flag = createFlag(course.flag);
   const effects = createEffects();
-  view.root.addChild(sun, createClouds(course), createPlatforms(course), flag.node, hero.node, effects.node);
+  view.root.addChild(sun, createPlatforms(course), flag.node, hero.node, effects.node, createClouds(course), createBackdrop(course));
 
   const rig = createCameraRig(tuning.camera, { ...course.start, grounded: true });
   let seconds = 0;
