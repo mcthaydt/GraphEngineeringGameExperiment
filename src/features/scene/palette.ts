@@ -39,14 +39,13 @@ export interface IslandLook {
 }
 
 /** Fresh at the start, warmer in the middle, cooler toward the end, so each stretch of the course feels different. */
-export const LOOKS: readonly IslandLook[] = [
-  { top: [0x7cdc4f, 0x68c640], edge: 0x4aa838, earth: [0xd7a062, 0xc68c4c], deep: 0x8d5a34 },
-  { top: [0xa9de4d, 0x94ca3f], edge: 0x6fa732, earth: [0xdb9a52, 0xc9853f], deep: 0x95562b },
-  { top: [0x57d08a, 0x46bc76], edge: 0x329f64, earth: [0xc99a74, 0xb78760], deep: 0x7b5642 },
-];
+export const FRESH: IslandLook = { top: [0x7cdc4f, 0x68c640], edge: 0x4aa838, earth: [0xd7a062, 0xc68c4c], deep: 0x8d5a34 };
+const WARM: IslandLook = { top: [0xa9de4d, 0x94ca3f], edge: 0x6fa732, earth: [0xdb9a52, 0xc9853f], deep: 0x95562b };
+const COOL: IslandLook = { top: [0x57d08a, 0x46bc76], edge: 0x329f64, earth: [0xc99a74, 0xb78760], deep: 0x7b5642 };
+export const LOOKS: readonly IslandLook[] = [FRESH, WARM, COOL];
 
 /** The last island: the same grass with a gold and cream trim, so the destination looks special. */
-export const GOAL_LOOK = { ...LOOKS[2]!, top: [0x6edc6c, 0x5ec85d] as const, rim: [0xffcf45, 0xfff0bd] as const };
+export const GOAL_LOOK = { ...COOL, top: [0x6edc6c, 0x5ec85d] as const, rim: [0xffcf45, 0xfff0bd] as const };
 
 export const PROPS = {
   trunk: 0x8b5a38,

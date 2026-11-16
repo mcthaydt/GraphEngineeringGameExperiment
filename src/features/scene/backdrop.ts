@@ -2,7 +2,7 @@ import type { Container3D } from '@pixi/3d';
 import type { Course } from '../course/course';
 import { createBaker } from './baked';
 import { bakeIsland, hazeTint } from './island';
-import { HAZE, LOOKS } from './palette';
+import { FRESH, HAZE, LOOKS } from './palette';
 
 /** Small floating islands far off to the sides and beyond the flag, fading into haze with distance: scale and depth for the eye. */
 const ISLANDS = [
@@ -27,7 +27,7 @@ export function createBackdrop(course: Course): Container3D {
     bakeIsland(
       baker,
       { x: course.flag.x + island.x, y: island.y, z: course.flag.z - island.beyond, width: size, depth: size, thickness: size * 0.45 },
-      { look: LOOKS[index % LOOKS.length] ?? LOOKS[0]!, tile: 4, tint: hazeTint(HAZE, island.haze), seed: 900 + index },
+      { look: LOOKS[index % LOOKS.length] ?? FRESH, tile: 4, tint: hazeTint(HAZE, island.haze), seed: 900 + index },
     );
   });
   return baker.build('backdrop');

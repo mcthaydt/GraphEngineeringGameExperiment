@@ -117,9 +117,9 @@ export function createFlag(at: { x: number; y: number; z: number }): FlagView {
   // A pale column of light above the flag: thin, see-through, and tall enough to spot from the start.
   const beam = (radius: number, alpha: number): Mesh3D =>
     new Mesh3D({
-      geometry: new CylinderGeometry({ radiusTop: radius, radiusBottom: radius, height: 16, radialSegments: 8, openEnded: true }),
+      geometry: new CylinderGeometry({ radiusTop: radius, radiusBottom: radius, height: 70, radialSegments: 8, openEnded: true }),
       material: new FlatMaterial({ baseColor: 0xfff1a8, alphaMode: 'blend', alpha }),
-      position: { x: 0, y: topY + 8, z: 0 },
+      position: { x: 0, y: PLINTH_HEIGHT + 35, z: 0 },
       castShadow: false,
     });
   node.addChild(plinth, pole, top, ring, beam(0.55, 0.1), beam(0.28, 0.16));
