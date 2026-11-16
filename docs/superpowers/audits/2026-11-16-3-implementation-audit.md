@@ -106,10 +106,10 @@ round. N5 (who creates the repo) is resolved by the apps wording "every step onl
 
 **Verdict: PASS** (R3 fixed; no red findings left. The 8 notes above stand as follow-ups.)
 
-Commit examined: `01890cd` on `claude/project-thread-diycz9`. Re-check written 2026-11-16 17:22 UTC (from `date -u`).
+Commit examined: `01890cd` on `claude/project-thread-diycz9`. Re-check written 2026-11-16 17:21 UTC (from `date -u`).
 
 - Since `9865424`, the only changes are this audit file (`a132c6b`) and `.claude/skills/vertical-slice/SKILL.md`
-  (`01890cd`): `git diff --stat a132c6b 01890cd` lists only that skill, 7 lines.
+  (`01890cd`): `git diff --stat a132c6b 01890cd` lists only that skill (4 insertions, 3 deletions).
 - R3: "the stages start, with the slice as the spec's starting point" now reads "later work starts from it. Each piece
   of later work takes the short or the staged path by its own risk, with the slice as the starting point of its brief."
   "written into the spec" and "the spec names a runnable baseline" now say "the brief". `git grep` finds no "stages
