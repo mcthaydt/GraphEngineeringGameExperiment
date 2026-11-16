@@ -1,7 +1,7 @@
 // Measures real frame times of the built game in headless Chromium on the computer profile.
 // Usage: npm run build && npm run measure            (exits 1 when the budget is missed)
-import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { startServer, stopServer } from './preview-server.ts';
 
 const BUDGET_MS = 16.7;
 const SECONDS = Number(process.env.DURATION ?? 10);
@@ -10,10 +10,15 @@ const UNCAPPED = process.env.UNCAPPED === '1';
 const PORT = 4188;
 const url = `http://localhost:${PORT}/${process.env.QUERY ?? ''}`;
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
-const browser = await chromium.launch({ args: UNCAPPED ? ['--disable-frame-rate-limit', '--disable-gpu-vsync'] : [] });
+// Fails here if the port is taken, so a leftover server can never be measured by mistake.
+const server = await startServer({ command: 'npx', args: ['vite', 'preview', '--port', String(PORT), '--strictPort'], port: PORT }).catch((error: Error) => {
+  console.error(error.message);
+  process.exit(1);
+});
+let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
 let failed: boolean;
 try {
+  browser = await chromium.launch({ args: UNCAPPED ? ['--disable-frame-rate-limit', '--disable-gpu-vsync'] : [] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   for (let tries = 0; ; tries++) {
     try {
@@ -68,7 +73,7 @@ try {
   failed = UNCAPPED || times.length < SECONDS * 50 || mean > BUDGET_MS || slow > times.length * 0.01;
   console.log(UNCAPPED ? 'Uncapped run: for diagnosis only' : failed ? `MISSED the ${BUDGET_MS} ms budget` : `Within the ${BUDGET_MS} ms budget`);
 } finally {
-  await browser.close();
-  server.kill();
+  await browser?.close();
+  await stopServer(server);
 }
 process.exit(failed ? 1 : 0);
