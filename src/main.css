@@ -1,0 +1,23 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #cdeeff;
+  overscroll-behavior: none;
+}
+#game {
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+}
+#game canvas {
+  display: block;
+}
+.sorry {
+  margin: 0;
+  padding: 20vh 24px;
+  text-align: center;
+  font: 800 clamp(22px, 5vmin, 36px) 'Trebuchet MS', system-ui, sans-serif;
+  color: #fff;
+}

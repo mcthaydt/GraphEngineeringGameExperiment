@@ -1,0 +1,31 @@
+# How the game feels. Distances in metres, speeds in metres per second, times in milliseconds.
+
+[player]
+radius = 0.4
+height = 1.1
+run_speed = 7.0
+ground_accel = 70.0
+ground_brake = 90.0
+air_accel = 38.0
+jump_speed = 11.5
+gravity = 30.0
+fall_gravity = 44.0
+# Letting go of jump early keeps this share of the upward speed: a tap is a hop, a hold is a leap.
+jump_cut = 0.45
+max_fall_speed = 28.0
+# Grace after walking off an edge, and memory of a jump pressed just before landing.
+coyote_ms = 110
+jump_buffer_ms = 130
+
+[camera]
+fov = 50.0
+back = 9.5
+up = 5.6
+look_ahead = 2.5
+look_up = 0.8
+# Higher follows the player more tightly (per second).
+follow = 6.0
+follow_height = 3.0
+
+[goal]
+reach = 1.3

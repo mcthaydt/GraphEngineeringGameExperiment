@@ -1,0 +1,75 @@
+# The first course. The player runs away from the camera, toward -z. Metres.
+name = "First steps"
+fall_y = -9.0
+start = { x = 0.0, y = 0.0, z = 0.0 }
+flag = { x = 0.0, y = 2.4, z = -56.0 }
+
+# A wide, safe place to learn to run.
+[[platforms]]
+x = 0.0
+y = 0.0
+z = -1.5
+width = 7.0
+depth = 9.0
+
+# A small first gap that is hard to miss.
+[[platforms]]
+x = 0.0
+y = 0.0
+z = -10.5
+width = 5.0
+depth = 5.0
+
+# A step up.
+[[platforms]]
+x = 0.0
+y = 1.2
+z = -17.5
+width = 4.5
+depth = 4.5
+
+# Over to the right.
+[[platforms]]
+x = 4.0
+y = 1.2
+z = -24.0
+width = 4.0
+depth = 4.0
+
+# Three stepping stones.
+[[platforms]]
+x = 4.0
+y = 1.2
+z = -30.0
+width = 2.6
+depth = 2.6
+
+[[platforms]]
+x = 1.5
+y = 1.8
+z = -35.0
+width = 2.6
+depth = 2.6
+
+[[platforms]]
+x = -1.5
+y = 2.4
+z = -40.0
+width = 2.6
+depth = 2.6
+
+# A breather before the last leap.
+[[platforms]]
+x = 0.0
+y = 2.4
+z = -46.5
+width = 4.5
+depth = 4.5
+
+# The flag's island.
+[[platforms]]
+x = 0.0
+y = 2.4
+z = -55.0
+width = 6.5
+depth = 6.5

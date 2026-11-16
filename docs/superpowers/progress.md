@@ -1,41 +1,61 @@
 # Progress
 
-Last updated: 2026-11-16 16:25 UTC
+Last updated: 2026-11-16 17:05 UTC
 
-## Active milestone: setup, then milestone 0 (the vertical slice)
+## Active milestone: milestone 0 (the vertical slice)
+
+Goal: run and jump across a short course of floating platforms to reach a flag. Falling puts you back at the start.
+Reaching the flag shows "You made it!" with one big "Play again" button.
+
+Bar: in a blind A/B against stills of the opening course of a polished commercial 3D platformer, a judge cannot pick
+ours as the amateur one on readability, game feel and polish. Also 60 fps in headless Chromium on the computer profile
+(measured), playable with keyboard and touch on small phone, tablet and computer, and a new player knows what to do
+within 10 seconds.
 
 ### Current work
 
-- Setup pull request: rules files, project scaffold, CI gate, tracking files.
+- Round 1 of 3: builders improve each piece, separate harsh critics judge it against the bar.
 
 ### Completed outcomes
 
-- Public repo `mcthaydt/GraphEngineeringGameExperiment` created by the owner.
-- CLAUDE.md and the five skills saved from the owner's message, placeholders filled (see Decisions).
+- First playable course, built by the slice lead: run, jump (tap for a hop, hold for a leap), fall and return to the
+  start, reach the flag, "You made it!", "Play again". Keyboard (arrows or WASD, Space) and touch (stick and Jump
+  button).
+- Playtests in `tests/playtest/`: an autopilot wins the course with the keyboard and with the touch controls on each
+  device size (computer 1280x720, tablet 810x1080, small phone 375x667), then presses "Play again"; a fall test.
+- `npm run measure`: frame times of the built game in headless Chromium at 1280x720. First playable: mean 16.66 ms,
+  median 16.7, p95 17.0, max 22.3, 0 of 571 frames over 25 ms (SwiftShader, no graphics card, light setting).
+- `npm run capture`: screenshots on each device size and a 10 second clip, full setting, time stepped by hand.
 
 ### Remaining
 
-- Merge the setup pull request (lane 3: it adds CI and the rules files, so it needs the owner's word).
-- Turn on branch protection on `main` requiring the `gate` check (owner's word; repository setting).
-- Start the vertical slice.
-- Automatic screenshots and playtest video in CI, once the slice adds screens and playtests.
+- Rounds 1 to 3 of build, judge, fix. Then the report: bar reached, evidence, what is left.
+- Lane 2 review of the pull request by a fresh session, and the visual check, before it can merge.
+- Automatic screenshots and playtest video in CI: needs a change to `.github/` (lane 3), so it waits for the owner.
+- Branch protection on `main` requiring the `gate` check (owner said yes on 2026-11-16; repository setting).
 
 ### Blockers
 
-- None yet. The merge waits on the owner's approval for the lane 3 items above.
+- None.
 
 ### Previews
 
-- None yet. The first preview will be the playable slice.
+- Screenshot gallery: see the link in the project thread. Local: `npm run dev`, or `npm run build && npm run preview`.
+- No public preview link exists; publishing one needs the owner's permission.
 
 ### Decisions
 
 | Decision | Who | Notes |
 |---|---|---|
-| Real 3D: pixi.js 8.23.0 + @pixi/3d 0.1.0, rapier3d-deterministic 0.21.0 instead of rapier2d | Owner (decision card, 2026-11-16) | @pixi/3d needs pixi.js ^8.23.0, so the listed 8.22.0 was bumped. @pixi/3d is 0.1.0, days old. |
-| Lint is ESLint 10 + typescript-eslint (strict) | Agent | The owner's tooling list named no linter. Easy to swap. |
-| TypeScript 6.0.3, not 7 | Agent | typescript-eslint and svelte-check do not support 7 yet (their peer ranges stop at 6). |
-| Playwright 1.63.0 | Agent | Matches the browser preinstalled in the cloud container; CI installs its own. |
-| Setup PR #1 ran on the short path though it is lane 3: no spec and no plan audit; a fresh implementation audit ran (`audits/2026-11-16-1-implementation-audit.md`) | Agent (deviation) | Owner asked whether that is enough. |
-| Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
-| Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
+| Real 3D: pixi.js 8.23.0 + @pixi/3d 0.1.0, rapier3d-deterministic 0.21.0 | Owner (decision card, 2026-11-16) | |
+| Core loop: run and jump across floating platforms to a flag | Agent (setup thread's guess) | The owner named none. Not owner-approved yet. |
+| Fable 5.2 leads the slice; builders and critics on Sonnet, high | Owner ("that's fine", 2026-11-16) | From the `vertical-slice` skill's prompt. |
+| Two picture settings, picked by the game: "lite" on machines with no graphics card, "full" elsewhere | Agent | Measured on this machine (SwiftShader): lit surfaces 37 to 52 ms a frame. Lite draws at half size with no smoothing; full draws at screen size (up to 2x) with smoothing. `?quality=lite` or `full` forces one. The 60 fps number is for lite. Full has not been run on a real graphics card. |
+| Scenery lighting is baked into corner colours, not computed live | Agent | Live lighting on big surfaces was the cost above. Same look on both settings. No real shadows; a round shadow under the player shows where a jump lands. Moving things (player, flag) are lit live. Easy to change per object. |
+| The sky is a CSS gradient behind a see-through canvas | Agent | Painting it in 3D cost 3 ms a frame; this costs nothing measurable. |
+| "60 fps" is judged as: mean frame time at most 16.7 ms and under 1% of frames over 25 ms, over 10 s | Agent | The screen ticks every 16.67 ms, so single frames wobble around it by a fraction of a millisecond. |
+| Physics tests run in the browser, not Node | Agent | The physics package only loads as a browser module. A small Vite plugin in `vite.config.ts` loads its wasm once. |
+| Tuning lives in `src/features/tuning/library/game.toml`, not a top-level `config/` | Agent | A feature owns its data; the layer test rejects imports from outside `src/`. |
+| Screenshots and the clip are taken on the full setting with time stepped by hand | Agent | So they repeat exactly and show what a player with a graphics card sees. Frame time is measured separately, on the real clock. |
+| Lint is ESLint 10 + typescript-eslint (strict); TypeScript 6.0.3; Playwright 1.63.0 | Agent | From setup. |
+| Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | From setup. |

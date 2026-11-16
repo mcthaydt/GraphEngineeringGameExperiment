@@ -4,3 +4,5 @@ coverage/
 test-results/
 .vitest-attachments/
 __screenshots__/
+captures/
+.vitest/

@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --project unit --project browser",
+    "capture": "vitest run --project capture && node scripts/clip.ts",
+    "measure": "node scripts/measure-frames.ts",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser"
   },
