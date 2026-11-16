@@ -18,7 +18,7 @@ jump_cut = 0.45
 max_fall_speed = 28.0
 # How far below where it last stood the hero has dropped when the fall sound plays, and when it is put back at the start.
 drop_depth = 0.8
-fall_depth = 4.0
+fall_depth = 3.0
 # Grace after walking off an edge, and memory of a jump pressed just before landing.
 coyote_ms = 140
 jump_buffer_ms = 170
