@@ -1,12 +1,14 @@
 # Progress
 
-Last updated: 2026-11-16 17:49 UTC (written by the implementer for the coordinator, which cannot write to the repo)
+Last updated: 2026-11-16 17:51 UTC (written by the implementer for the coordinator, which cannot write to the repo)
 
 ## Active milestone: setup, then milestone 0 (the vertical slice)
 
 ### Current work
 
 - Milestone 0, the vertical slice, running in its own session (prompt: blind A/B bar, 60 fps, keyboard and touch).
+- Rules change PR #7 (Fable orchestrates, Sonnet builds; run B cut): audit PASS, merging on green. After it merges the
+  slice resumes from round 0 with a Fable lead that briefs Sonnet builder and critic threads.
 
 ### Completed outcomes
 

@@ -27,7 +27,7 @@
   `visual-check` skills. PR #4 merged as 686c8b9 (reviewed at 01890cd, tested at c4f9fc5, main 1024f71).
 - 2026-11-16 17:45 UTC and 17:48 UTC: the owner replaced "Fable never writes code" with "Fable orchestrates, Sonnet
   builds, in separate threads", and cut run B (the slice B brief). Scope: that wording in CLAUDE.md and the
-  `vertical-slice` skill, and removing `docs/superpowers/specs/2026-11-16-slice-b-brief.md`.
+  `vertical-slice` skill, and removing `docs/superpowers/specs/2026-11-16-slice-b-brief.md`. PR #7, audited at d4d0d2c (PASS, `audits/2026-11-16-4-implementation-audit.md`); its merge commit is the PR #7 merge on `main`.
 - 2026-11-16 16:14 UTC: the owner said "ok" to merging PR #1 once CI is green and to requiring the `gate` check on
   `main` with branch protection. Scope: PR #1 and that one repository setting.
 - 2026-11-16 16:29 UTC: the owner accepted one fresh implementation audit for PR #1 in place of a spec and plan audit
