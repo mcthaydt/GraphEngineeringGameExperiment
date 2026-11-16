@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Decides from the diff which checks apply. The gate job below trusts only this.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.decide.outputs.code }}
+      full: ${{ steps.decide.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            changed=$(git diff --name-only "$BASE"...HEAD)
+          elif git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            changed=$(git diff --name-only "$BASE" HEAD)
+          else
+            changed=$(git ls-files)
+          fi
+          echo "$changed"
+          # Anything that is not a .md file brings the code checks back.
+          if echo "$changed" | grep -qv '\.md$'; then code=true; else code=false; fi
+          # Lockfile or build/test config changes run everything, even on a draft.
+          if echo "$changed" | grep -qE '^(package(-lock)?\.json|vite\.config\.ts|tsconfig\.json|eslint\.config\.js|svelte\.config\.js|\.github/)'; then config=true; else config=false; fi
+          if [ "$EVENT" != "pull_request" ] || [ "$DRAFT" != "true" ] || [ "$config" = true ]; then full=true; else full=false; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+
+  static:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  unit:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (only what the change reaches on a draft)
+        env:
+          FULL: ${{ needs.changes.outputs.full }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$FULL" = true ]; then npx vitest run --project unit
+          else npx vitest run --project unit --changed "$BASE" --bail 1 --passWithNoTests; fi
+
+  browser:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install --with-deps chromium
+      - name: Browser tests
+        env:
+          FULL: ${{ needs.changes.outputs.full }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          if [ "$FULL" = true ]; then npx vitest run --project browser --shard "$SHARD/6" --passWithNoTests
+          else npx vitest run --project browser --shard "$SHARD/6" --changed "$BASE" --bail 1 --passWithNoTests; fi
+
+  # The one required check. Passes only when every applicable check passed,
+  # and every other check was marked not applicable by `changes`.
+  gate:
+    if: always()
+    needs: [changes, static, unit, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CHANGES: ${{ needs.changes.result }}
+          CODE: ${{ needs.changes.outputs.code }}
+          STATIC: ${{ needs.static.result }}
+          UNIT: ${{ needs.unit.result }}
+          BROWSER: ${{ needs.browser.result }}
+        run: |
+          echo "changes=$CHANGES code=$CODE static=$STATIC unit=$UNIT browser=$BROWSER"
+          [ "$CHANGES" = success ] || exit 1
+          if [ "$CODE" = true ]; then
+            [ "$STATIC" = success ] && [ "$UNIT" = success ] && [ "$BROWSER" = success ] || exit 1
+          else
+            [ "$STATIC" = skipped ] && [ "$UNIT" = skipped ] && [ "$BROWSER" = skipped ] || exit 1
+          fi
