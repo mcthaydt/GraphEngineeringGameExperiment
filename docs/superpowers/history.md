@@ -23,6 +23,11 @@
 
 - 2026-11-16 16:14 UTC: the owner said "ok" to merging PR #1 once CI is green and to requiring the `gate` check on
   `main` with branch protection. Scope: PR #1 and that one repository setting.
+- 2026-11-16 16:29 UTC: the owner accepted one fresh implementation audit for PR #1 in place of a spec and plan audit
+  (decision card). Scope: PR #1 only.
+- 2026-11-16 16:32 UTC: PR #1 merged as 31fa429. The owner ran the branch protection command; verified: `main` is
+  protected and requires the `gate` check. Sessions cannot change repository settings or delete branches through
+  their GitHub access, so those are owner CLI steps.
 
 ## Approved screens
 

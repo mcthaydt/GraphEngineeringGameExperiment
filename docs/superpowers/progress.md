@@ -1,8 +1,47 @@
 # Progress
 
-Last updated: 2026-11-16 17:05 UTC
+Last updated: 2026-11-16 16:34 UTC
 
-## Active milestone: milestone 0 (the vertical slice)
+## Active milestone: setup, then milestone 0 (the vertical slice)
+
+### Current work
+
+- Milestone 0, the vertical slice, running in its own session (prompt: blind A/B bar, 60 fps, keyboard and touch).
+
+### Completed outcomes
+
+- Public repo `mcthaydt/GraphEngineeringGameExperiment` created by the owner.
+- Setup merged (PR #1, 31fa429): rules files, scaffold on the 3D stack, CI gate, tracking files.
+- `main` requires the `gate` check (owner ran the command; verified).
+
+### Remaining
+
+- Finish the vertical slice, including CI screenshots and playtest video.
+- Agree the delivery order after the slice.
+- Delete the merged branch `setup/project-rules` (owner CLI step; still present at 16:33 UTC).
+
+### Blockers
+
+- None.
+
+### Previews
+
+- None yet. The first preview will be the playable slice.
+
+### Decisions
+
+| Decision | Who | Notes |
+|---|---|---|
+| Core loop guess for the slice: run and jump across floating platforms to a flag; falling restarts | Agent (assumption) | Owner gave no core loop. |
+| Real 3D: pixi.js 8.23.0 + @pixi/3d 0.1.0, rapier3d-deterministic 0.21.0 instead of rapier2d | Owner (decision card, 2026-11-16) | @pixi/3d needs pixi.js ^8.23.0, so the listed 8.22.0 was bumped. @pixi/3d is 0.1.0, days old. |
+| Lint is ESLint 10 + typescript-eslint (strict) | Agent | The owner's tooling list named no linter. Easy to swap. |
+| TypeScript 6.0.3, not 7 | Agent | typescript-eslint and svelte-check do not support 7 yet (their peer ranges stop at 6). |
+| Playwright 1.63.0 | Agent | Matches the browser preinstalled in the cloud container; CI installs its own. |
+| Setup PR #1 ran on the short path though it is lane 3: no spec and no plan audit; a fresh implementation audit ran (`audits/2026-11-16-1-implementation-audit.md`) | Agent (deviation) | Owner accepted it (decision card, 16:29 UTC). |
+| Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
+| Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
+
+## Milestone 0: the vertical slice (kept by the slice session; last updated 2026-11-16 17:20 UTC)
 
 Goal: run and jump across a short course of floating platforms to reach a flag. Falling puts you back at the start.
 Reaching the flag shows "You made it!" with one big "Play again" button.
@@ -12,11 +51,11 @@ ours as the amateur one on readability, game feel and polish. Also 60 fps in hea
 (measured), playable with keyboard and touch on small phone, tablet and computer, and a new player knows what to do
 within 10 seconds.
 
-### Current work
+### Slice: current work
 
 - Round 1 of 3: builders improve each piece, separate harsh critics judge it against the bar.
 
-### Completed outcomes
+### Slice: completed outcomes
 
 - First playable course, built by the slice lead: run, jump (tap for a hop, hold for a leap), fall and return to the
   start, reach the flag, "You made it!", "Play again". Keyboard (arrows or WASD, Space) and touch (stick and Jump
@@ -27,28 +66,26 @@ within 10 seconds.
   median 16.7, p95 17.0, max 22.3, 0 of 571 frames over 25 ms (SwiftShader, no graphics card, light setting).
 - `npm run capture`: screenshots on each device size and a 10 second clip, full setting, time stepped by hand.
 
-### Remaining
+### Slice: remaining
 
 - Rounds 1 to 3 of build, judge, fix. Then the report: bar reached, evidence, what is left.
 - Lane 2 review of the pull request by a fresh session, and the visual check, before it can merge.
 - Automatic screenshots and playtest video in CI: needs a change to `.github/` (lane 3), so it waits for the owner.
-- Branch protection on `main` requiring the `gate` check (owner said yes on 2026-11-16; repository setting).
 
-### Blockers
+### Slice: blockers
 
 - None.
 
-### Previews
+### Slice: previews
 
-- Screenshot gallery: see the link in the project thread. Local: `npm run dev`, or `npm run build && npm run preview`.
+- Screenshot gallery, updated each round: https://claude.ai/artifact/AU49SLB3f6zpMbt3H1P5iu (private to the owner).
+- Draft pull request #3. Local: `npm run dev`, or `npm run build && npm run preview`.
 - No public preview link exists; publishing one needs the owner's permission.
 
-### Decisions
+### Slice: decisions
 
 | Decision | Who | Notes |
 |---|---|---|
-| Real 3D: pixi.js 8.23.0 + @pixi/3d 0.1.0, rapier3d-deterministic 0.21.0 | Owner (decision card, 2026-11-16) | |
-| Core loop: run and jump across floating platforms to a flag | Agent (setup thread's guess) | The owner named none. Not owner-approved yet. |
 | Fable 5.2 leads the slice; builders and critics on Sonnet, high | Owner ("that's fine", 2026-11-16) | From the `vertical-slice` skill's prompt. |
 | Two picture settings, picked by the game: "lite" on machines with no graphics card, "full" elsewhere | Agent | Measured on this machine (SwiftShader): lit surfaces 37 to 52 ms a frame. Lite draws at half size with no smoothing; full draws at screen size (up to 2x) with smoothing. `?quality=lite` or `full` forces one. The 60 fps number is for lite. Full has not been run on a real graphics card. |
 | Scenery lighting is baked into corner colours, not computed live | Agent | Live lighting on big surfaces was the cost above. Same look on both settings. No real shadows; a round shadow under the player shows where a jump lands. Moving things (player, flag) are lit live. Easy to change per object. |
@@ -57,5 +94,3 @@ within 10 seconds.
 | Physics tests run in the browser, not Node | Agent | The physics package only loads as a browser module. A small Vite plugin in `vite.config.ts` loads its wasm once. |
 | Tuning lives in `src/features/tuning/library/game.toml`, not a top-level `config/` | Agent | A feature owns its data; the layer test rejects imports from outside `src/`. |
 | Screenshots and the clip are taken on the full setting with time stepped by hand | Agent | So they repeat exactly and show what a player with a graphics card sees. Frame time is measured separately, on the real clock. |
-| Lint is ESLint 10 + typescript-eslint (strict); TypeScript 6.0.3; Playwright 1.63.0 | Agent | From setup. |
-| Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | From setup. |
