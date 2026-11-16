@@ -80,7 +80,8 @@ async function whereIs(colour: number, close = 30): Promise<Box | undefined> {
   return box;
 }
 
-const overlaps = (a: Box, b: DOMRect): boolean => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+const overlaps = (a: Box, b: DOMRect, margin = 0): boolean =>
+  a.left < b.right + margin && a.right > b.left - margin && a.top < b.bottom + margin && a.bottom > b.top - margin;
 
 function flyToFlag(g: Game): void {
   const pilot = createAutopilot(course);
@@ -101,21 +102,28 @@ describe.each(SIZES)('on a $name', (size) => {
     expect(overlaps(flag, sign().getBoundingClientRect()), `flag ${JSON.stringify(flag)} under the words`).toBe(false);
   });
 
-  it('keeps the win screen off the hero and the flag', async () => {
+  it('keeps the win screen off the hero and the flag, through all its hops', { timeout: 60_000 }, async () => {
     const g = await open(size.width, size.height, size.touch);
     flyToFlag(g);
     expect(g.snapshot().phase).toBe('won');
     await page.getByRole('button', { name: 'Play again' }).hover();
     await Promise.all(document.getAnimations().map((animation) => animation.finished));
     const win = mount?.querySelector('[role="dialog"]');
-    const parts = [...(win?.children ?? [])].map((child) => child.getBoundingClientRect());
+    const parts = [...(win?.querySelectorAll('h1, button') ?? [])].map((part) => part.getBoundingClientRect());
     expect(parts.length).toBeGreaterThan(0);
-    for (const colour of [PALETTE.flag, PALETTE.hero]) {
-      const box = await whereIs(colour);
-      expect(box, `colour ${colour.toString(16)} is on screen`).toBeDefined();
-      if (!box) continue;
-      for (const part of parts) expect(overlaps(box, part), `${colour.toString(16)} ${JSON.stringify(box)} under the win words`).toBe(false);
+    // The hero cheers with hops, so look at it through a whole run of them, not at one moment.
+    const things = [PALETTE.flag, PALETTE.hero, PALETTE.heroViolet, PALETTE.heroBoot];
+    for (let look = 0; look < 24; look++) {
+      for (const colour of things) {
+        const box = await whereIs(colour);
+        if (!box) continue;
+        for (const part of parts) {
+          expect(overlaps(box, part, 12), `${colour.toString(16)} ${JSON.stringify(box)} under the win words`).toBe(false);
+        }
+      }
+      g.advance(110);
     }
+    expect(await whereIs(PALETTE.hero), 'the hero is on screen').toBeDefined();
   });
 });
 

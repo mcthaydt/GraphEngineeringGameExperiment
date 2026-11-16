@@ -42,8 +42,10 @@
   {:else}
     <!-- Low on the screen, so the hero and the flag stay in view. -->
     <div class="win" role="dialog" aria-labelledby="win-title">
-      <h1 id="win-title">You made it!</h1>
-      <button bind:this={again} onclick={onAgain}>Play again</button>
+      <div class="actions">
+        <h1 id="win-title">You made it!</h1>
+        <button bind:this={again} onclick={onAgain}>Play again</button>
+      </div>
     </div>
   {/if}
 </div>
@@ -134,23 +136,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 2vh;
-    padding: 24px 24px max(6vh, env(safe-area-inset-bottom));
+    padding: 24px 24px max(3vh, env(safe-area-inset-bottom));
     animation: appear 0.35s ease-out both;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2vh;
   }
   h1 {
     margin: 0;
     padding: 0.12em 0.6em 0.18em;
     border-radius: 999px;
     background: var(--pill);
-    font-size: clamp(34px, 9vmin, 90px);
+    font-size: clamp(34px, min(9vmin, 8vh), 90px);
     font-weight: 900;
     text-align: center;
     animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
   }
   button {
     min-width: min(80vw, 360px);
-    min-height: clamp(72px, 11vmin, 90px);
+    min-height: clamp(72px, 9vmin, 90px);
     padding: 18px 44px;
     border: 0;
     border-radius: 999px;
@@ -179,16 +186,21 @@
       0 2px 0 var(--gold-deep),
       0 6px 12px rgb(0 30 80 / 40%);
   }
-  /* A phone on its side has little height: keep the words and button small enough to stay below the hero. */
+  /* A phone on its side has no height to spare: the words and the button sit side by side, low down, so the
+     hero hopping above them is never covered. */
   @media (max-height: 480px) {
     .win {
-      gap: 6px;
       padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .actions {
+      flex-direction: row;
+      gap: 16px;
     }
     h1 {
       font-size: 28px;
     }
     button {
+      min-width: 0;
       min-height: 64px;
       padding-block: 10px;
     }
