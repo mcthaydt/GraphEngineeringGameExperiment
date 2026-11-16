@@ -25,11 +25,13 @@ anything new, is the owner's call.
   repository visibility, and asks the owner only for choices that are still missing.
 - A milestone is done when it is merged, green, its screens have been through the design review loop (`visual-check`),
   and the owner approves the finished result. Scenes use `scene-polish`.
-- Isolated review agents are allowed for required reviews. The vertical slice also allows builder and critic
-  subagents, within the delegation rules and session limits below. The advisor is asked on the delivery order.
+- Reviews are separate threads the coordinator starts, within the delegation rules and session limits below. The vertical
+  slice's builders and critics are separate threads too. The advisor is asked on the delivery order.
 
 ## How work goes
 
+- **These rules govern the coordinator and every session from the first message, before the repo exists.** They say
+  how to run the work, not only what to commit.
 - **Risk, uncertainty and dependencies decide the process,** never the number of tasks or files.
 - **The brief** is what the work is judged against and what authorizes it: on the short path, the owner's request plus
   the acceptance criteria written in the pull request, with no separate document to create or approve; on the staged
@@ -38,7 +40,8 @@ anything new, is the owner's call.
   not have yet takes one session, even a whole feature across many files: understand the request, write its acceptance
   criteria, build it, verify it with the checks that touch it, and merge on green. No planning document: the brief is
   the request and the pull request. Keep working until there is something to approve; ask only when a decision that is
-  the owner's blocks you.
+  the owner's blocks you. A small app with no users or real data takes the short path, its first-time setup
+  included.
 - **The path and the reviews are separate decisions.** The path follows how uncertain the work is; the reviews follow
   its lane (Settings). When the lane calls for a review, a fresh session reviews the change and the original implementer
   fixes the reviewer's findings, whichever path the work is on.
@@ -109,7 +112,8 @@ reports into one owner-facing update. Otherwise the implementer handles these du
 
 - **Identity.** Every commit is authored by mcthaydt <107786093+mcthaydt@users.noreply.github.com>. No Claude co-author, no "Claude-Session" trailer and no
   "Generated with Claude Code" line in commits, pull request bodies or docs. Pull requests end with "Requested by
-  **The Realest Alive**". Never force-push. Merge with a merge commit, never a squash.
+  **The Realest Alive**". Never force-push. Merge with a merge commit, never a squash. Check the PR body's last line after every create or edit, since tools such
+  as `gh pr create` can add a footer.
 - **The drunk-grandma test.** All copy and UX must be something a drunk grandma could understand and use: plain words,
   one main action per screen, big obvious buttons, no jargon, and nothing that needs explaining.
 - **CLI first.** If something can be done with a CLI (gh, npm, wrangler and so on), do it with the CLI, and give the
@@ -118,9 +122,9 @@ reports into one owner-facing update. Otherwise the implementer handles these du
   problem found on the way is reported, not fixed, unless it blocks the task. A decision the owner has made is not
   reopened; if new facts make it look wrong, say so once, with the facts.
 - **Report honestly.** Say what ran, what did not run and why, and what is still open. "Done" means merged to `main`
-  and green there; otherwise say where it is: "on a branch", "in CI", "not started". Never round up. Hashes, sizes and
-  timings are measured, never written by hand, and a tool or asset is checked to exist before anything is built on it.
-  Speak plainly: the conclusion first, short.
+  and green there; otherwise say where it is: "on a branch", "in CI", "not started". Never round up. Hashes, sizes,
+  timings and timestamps are measured, never written by hand (timestamps come from `date`), and a tool or asset is
+  checked to exist before anything is built on it. Speak plainly: the conclusion first, short.
 - **Findings carry evidence.** Every finding says what is wrong, the evidence, the expected result and a bounded fix,
   and a fix is checked by a program or a second session, never by the fixer's own say-so. A check proves one property;
   a review (model or human) finds what no check encodes: missing requirements, confusing screens, wrong assumptions.
@@ -130,7 +134,8 @@ reports into one owner-facing update. Otherwise the implementer handles these du
   whenever they help; CI is the merge gate. A failing test blocks only the change that touches it: report an unrelated
   failure, and give a failure on `main` its own thread. A merge still needs every required check green, unless the
   owner authorizes an exception named in the pull request. A test that fails once and passes on retry is a defect:
-  report it with its text. Never loosen, skip or re-record a test to hide a defect. Updating a golden for an approved
+  report it with its text. Never loosen, skip or re-record a test to hide a defect. No `--pass-with-no-tests` or similar flag that
+  lets an empty suite pass in CI. Updating a golden for an approved
   behavior change is fine, with its before and after shown. A docs change or a purely visual change is verified by
   what fits (a link or build check, the approved look), not by an invented unit test.
 - **Lessons become tests first.** A confirmed failure gets a regression test. It becomes a rule only when no test can
@@ -139,13 +144,17 @@ reports into one owner-facing update. Otherwise the implementer handles these du
   that approach and reassess; never repeat a failed approach without new evidence. Keep on with independent work
   meanwhile. Report material setbacks under "Owner visibility and early steering". Pause and request an owner decision
   only when their decision, access or a change to an agreed budget is needed. Never bypass an access restriction or
-  weaken an acceptance criterion to get past a problem. If this repo is indexed in Graphify, use its tools to find code
+  weaken an acceptance criterion to get past a problem. No subagents unless the owner says so. Sessions the
+  coordinator starts are threads, not subagents. If this repo is indexed in Graphify, use its tools to find code
   and check what a change affects before changing it.
-- **Delegation.** The coordinator, or the implementer when no coordinator is active, may start a fresh, isolated review
-  agent for a required code, design, visual or playtest review. It may read and run checks and write its audit file;
-  the implementer makes fixes. The vertical-slice lead may also start builder and critic subagents. All these agents
-  count toward the work-session limits in Settings, and builders count toward the writer limit. Reviewers do not
-  delegate further. Other subagents or nested delegation require the owner's authorization.
+- **Delegation.** Sessions the coordinator starts are threads, not subagents. No session starts subagents of its own
+  unless the owner says so. The coordinator starts a fresh thread for each required code, design, visual or playtest
+  review; a reviewer may read and run checks and write its audit file, and the implementer makes fixes. The vertical-slice
+  lead asks the coordinator for its builder and critic threads. All these threads count toward the work-session limits in
+  Settings, and builders count toward the writer limit. Reviewers do not delegate further.
+- **Fable never writes code.** A Fable model only plans, leads and judges. Builders and critics run as separate
+  threads on Sonnet, high effort, started by the coordinator from a self-contained brief, never as subagents inside a
+  Fable lead. This holds for the vertical-slice lead too.
 
 ## Risk
 
@@ -162,6 +171,9 @@ tooling for this. The plan names any other lane 2 or 3 unit up front. The highes
   anything git cannot restore, any migration, any write of real data, and a change to the rules that decide what needs
   the owner (CLAUDE.md and the skills, even though they are `.md` files). Requires its lane's checks and reviews plus
   the owner's approval or a recorded standing permission covering the exact action.
+- **First-time setup.** Bootstrap from the owner's own rules text is lane 2: creating the repo, its CI and the rules
+  files as the owner gave them. The owner's request is the standing permission for the setup check. Later changes to
+  the rules or CI are lane 3 as usual.
 - **Permission and risk are separate.** Standing permission removes a repeated approval request; it never lowers the
   lane or removes required checks and reviews. A routine, non-destructive validation on an authorized device does not
   itself raise the change's lane. A migration, real-data write or other consequential action retains its inherent lane
@@ -246,7 +258,8 @@ The least every brief's acceptance criteria cover, where they apply:
   a commit; the reviewer commits only its audit file and hands the branch back by naming its own commit. The audit reads
   a named commit, never a moving branch. Independent writers use their own branches or worktrees. The coordinator is the
   only writer of `progress.md` and `history.md` while active, including for delegated short-path work. Otherwise
-  the implementer owns those records.
+  the implementer owns those records. If the
+  coordinator cannot write to the repo, the implementer writes them for it and says so in the commit.
   The tracking document in the implementation prompt is the plan's own checklist, written by the implementer on its
   branch. Worker reports do not create additional writers of the shared progress record.
 - **The coordinator** is one long-lived session. It talks with the owner, writes the spec, creates `progress.md` and
@@ -257,8 +270,8 @@ The least every brief's acceptance criteria cover, where they apply:
 - **The advisor** gives a short second opinion on a big call: the risks, what is missing, a recommendation. It never
   writes code or changes files. The coordinator starts it only for big calls: specs, plans, roadmap changes, and
   approving designs or mockups. It does not reopen the owner's decisions.
-- Use the runtime's supported sessions or isolated review agents under the Delegation rule. Do not bypass its scope
-  or session limits by giving a worker a different label.
+- Sessions the coordinator starts are threads, not subagents. No session starts subagents of its own unless the owner
+  says so. Do not bypass the Delegation rule's scope or session limits by giving a worker a different label.
 - **Slices.** Do not move to the next slice without a design review loop on the screens completed during that slice (see
   `visual-check`).
 - **Handoff.** Every stage reads the files its prompt names, normally the spec, the audits so far and `progress.md`; the
@@ -310,7 +323,7 @@ Change a number or a model here and nowhere else.
 - Pull requests open: 3. Checks run at once, as many as the CI capacity takes without queueing (measured, not guessed);
   only the integration with `main` before a merge runs one pull request at a time. Branches: `main` plus branches with
   an open pull request, 5 at most; a branch merges or closes within 2 days.
-- Work sessions at once: 5, all on the current milestone, and at most 3 writing code (implementers and slice sessions).
+- Work sessions at once: 5, all on the current milestone, and at most 3 writing code (implementers and slice builders).
   The rest only read and report. It is a limit, not a goal: a session starts only when its work is ready.
 - Session refresh: when the context degrades (it repeats itself, loses earlier decisions or nears full) or at a natural
   boundary (a merge, a finished stage), with a handoff: the last commit, where to resume, what is left. The coordinator
@@ -324,4 +337,5 @@ Change a number or a model here and nowhere else.
   implementation audit.
 - Models and effort: a session whose model and effort are not named runs on Opus, medium. Nothing runs above high
   effort. Plan: Fable 5.2, medium. Plan audit: Opus, medium. Execution (and its fixes): Sonnet, high. Implementation
-  audit: Opus, medium. Advisor: Fable 5.2, medium. Scene review: Opus, high.
+  audit: Opus, medium. Advisor: Fable 5.2, medium. Scene review: Opus, high. Slice lead: Fable 5.2, medium; slice
+  builders and critics: Sonnet, high. Fable never writes code (see Delegation).
