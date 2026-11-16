@@ -1,14 +1,15 @@
 # Progress
 
-Last updated: 2026-11-16 17:51 UTC (written by the implementer for the coordinator, which cannot write to the repo)
+Last updated: 2026-11-16 18:18 UTC (written by the implementer for the coordinator, which cannot write to the repo)
 
 ## Active milestone: setup, then milestone 0 (the vertical slice)
 
 ### Current work
 
 - Milestone 0, the vertical slice, running in its own session (prompt: blind A/B bar, 60 fps, keyboard and touch).
-- Rules change PR #7 (Fable orchestrates, Sonnet builds; run B cut): audit PASS, merging on green. After it merges the
-  slice resumes from round 0 with a Fable lead that briefs Sonnet builder and critic threads.
+- Rules change PR #7 merged (af07cb3); a follow-up rules change cuts the CLAUDE.md "Fable orchestrates" bullet and keeps
+  the `vertical-slice` Gauntlet wording. The slice resumes from round 0 with a Fable lead that briefs Sonnet builder and
+  critic threads.
 
 ### Completed outcomes
 
@@ -50,6 +51,6 @@ Last updated: 2026-11-16 17:51 UTC (written by the implementer for the coordinat
 | Setup PR #1 ran on the short path though it is lane 3: no spec and no plan audit; a fresh implementation audit ran (`audits/2026-11-16-1-implementation-audit.md`) | Agent (deviation) | Owner accepted it (decision card, 16:29 UTC). |
 | PR #4 wording: the owner's apps rules text wherever it matched the eight findings; a slice is never a small change for `visual-check` | Owner (message, 2026-11-16 17:15 UTC) | Replaced the implementer's first wording after the cycle 2 audit failed it. |
 | PR #4 ran lane 3 with two fresh audits instead of a spec and plan audit | Agent (deviation) | The owner's attached messages were the approval; an isolated subagent ran the first audit, threads ran the rest. |
-| Fable orchestrates and Sonnet builds, in separate threads (replaces "Fable never writes code"); run B cut, its brief removed | Owner (messages, 2026-11-16 17:45 and 17:48 UTC) | Fable may touch code only to integrate or unblock, never to build a piece. After the slice the normal flow runs: plan Fable, plan audit Opus, execution Sonnet high, implementation audit Opus, advisor Fable. |
+| The lead orchestrates and the coordinator starts each builder and critic as its own Sonnet-high thread (`vertical-slice` Gauntlet prompt); run B cut, its brief removed | Owner (messages, 2026-11-16 17:45, 17:48 and 18:17 UTC) | The CLAUDE.md "Fable orchestrates" bullet was added by PR #7 and cut again at the owner's word (18:17 UTC). After the slice the normal flow runs: plan Fable, plan audit Opus, execution Sonnet high, implementation audit Opus, advisor Fable. |
 | Commit author is `mcthaydt <107786093+mcthaydt@users.noreply.github.com>` | Agent (assumption) | GitHub's no-reply address, so no private email is published. Owner may change it. |
 | Wide and hard-to-undo paths in CLAUDE.md Risk | Agent (assumption) | Filled from this layout; revisit when the code grows. |
