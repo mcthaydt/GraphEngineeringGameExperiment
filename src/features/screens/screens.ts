@@ -3,6 +3,7 @@ import Hud from './Hud.svelte';
 import { createHudState, type HudState } from './hud-state.svelte';
 
 export type { HudState } from './hud-state.svelte';
+export { prefersTouch } from './touch';
 
 export interface ScreenHandlers {
   onStick(x: number, z: number): void;
@@ -15,13 +16,10 @@ export interface Screens {
   dispose(): void;
 }
 
-/** True on a phone or tablet, where there is no keyboard to play with. */
-export const prefersTouch = (): boolean => window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-
 /** Draws the words, the touch controls and the win screen over the game. */
 export function createScreens(target: HTMLElement, touch: boolean, handlers: ScreenHandlers): Screens {
   const ui = createHudState(touch);
-  // A finger on the screen of a laptop with a touchscreen should bring the touch controls up too.
+  // A finger on the screen of a laptop with a touchscreen brings the touch controls up too, and only then.
   const onPointer = (event: PointerEvent): void => {
     if (event.pointerType === 'touch') ui.touch = true;
   };
