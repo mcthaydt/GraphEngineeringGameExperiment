@@ -13,13 +13,18 @@
 - Session tools for the staged path (checked 2026-11-16): starting a separate session works through the project
   coordinator, which starts threads on request; messaging the coordinator and other threads works; tools named
   `switch_model` and `archive_session` are listed for this session but were not tried yet. Isolated review agents
-  (subagents) work: one ran the audit of PR #1.
+  (subagents) work: one ran the audit of PR #1 and one the first audit of PR #4. Since PR #4 the rules ban subagents
+  unless the owner says so; reviews, builders and critics are threads the coordinator starts.
 
 ## Standing permissions
 
 - None yet.
 
 ## Approvals
+
+- 2026-11-16 17:13 UTC and 17:15 UTC: the owner gave the eight findings from the apps run, "Fable should never code",
+  and the apps rules text. Scope: those exact edits to CLAUDE.md and the `release`, `vertical-slice` and
+  `visual-check` skills. PR #4 merged as 686c8b9 (reviewed at 01890cd, tested at c4f9fc5, main 1024f71).
 
 - 2026-11-16 16:14 UTC: the owner said "ok" to merging PR #1 once CI is green and to requiring the `gate` check on
   `main` with branch protection. Scope: PR #1 and that one repository setting.
