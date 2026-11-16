@@ -1,9 +1,14 @@
-# Slice B brief: the first course (milestone 0)
+# Slice B brief: round 0, the first playable (milestone 0)
 
-Written 2026-11-16 17:22 UTC, against `main` at 1024f71. This is run B of an A/B the owner asked for: "one builder,
-many judges". One implementer builds all of it. Fresh reviewers judge each round: code, scene look, playtest and a
-blind comparison. At most 3 rounds (a round is build, judge, fix), then stop and report the bar reached, the evidence
-and what is left.
+Written 2026-11-16, against `main` at 1024f71. This is run B of an A/B the owner asked for. Run A (the "gauntlet"
+run) reached round 0, a plain first playable, on draft pull request #3 at commit 44d1f67. Run B takes a different
+route to the same point: this brief first, then one implementer builds all of it. The owner then compares the two.
+
+**Scope: round 0 only.** The implementer builds the first playable, proves it with the checks in section 8, opens one
+draft pull request and stops. No judge rounds, no polish rounds and no merge in this run.
+
+**Fair comparison.** The implementer does not open pull request #3, its branch or its files. Everything needed is in
+this brief and in CLAUDE.md.
 
 This brief is what the work is judged against. It says what done looks like. How the code is built is the
 implementer's call, inside CLAUDE.md.
@@ -20,9 +25,13 @@ Who decided what:
 | Stack (pixi.js 8.23.0 + @pixi/3d 0.1.0, rapier3d-deterministic 0.21.0, koota, effect, zod, svelte, smol-toml) | Owner | Fixed in CLAUDE.md. No new dependency. |
 | Core loop: run, jump, flag, fall restarts | Agent guess, kept from the first prompt | The owner has not changed it. |
 | The bar (section 2) | Kept from the first prompt | |
+| Round 0 only, to compare with run A | Owner (2026-11-16) | |
 | Course, feel numbers, camera, art direction, words on screen (sections 3 to 7) | Agent (this brief) | Starting values. Not owner-approved until the finished result is. |
 
 ## 2. The bar
+
+The slice's bar is unchanged and is where later rounds would aim. Round 0 is judged by section 8 only: items 2 to 4
+below are checked there, and item 1 is not judged in this run.
 
 1. **Blind A/B.** A judge shown our screenshots and a 10 second clip beside stills of the opening course of a polished
    commercial 3D platformer (Super Mario 3D World, first level) cannot pick ours as the amateur one on readability,
@@ -122,6 +131,7 @@ flat colour, in code: no downloaded models or textures, and nothing taken from a
   the bottom. Tops are clearly brighter than sides, so the place to stand reads first.
 - **Hero:** one small round creature in warm orange with a pale belly and big eyes. It reads as a single bold shape
   from behind at phone size. It is the most saturated warm thing on screen.
+- **Round 0 level of finish:** plain and clean is enough. The rules below must hold; rich detail is not expected yet.
 - **Flag:** tall white pole, red flag that waves, a gold ball on top. It is the tallest thing on its island and can be
   seen against the sky from the breather platform.
 - **Sky:** deep blue at the top to pale near the horizon, soft white clouds below and far away, a warm sun feel. Far
@@ -130,9 +140,7 @@ flat colour, in code: no downloaded models or textures, and nothing taken from a
 - **Light:** one warm sun from the upper left, cool shade. Lighting is consistent across every object.
 - **Motion:** the flag waves, clouds drift slowly, the hero bobs when running. Nothing flickers, pops or stutters.
 
-Starting colours (may be tuned in the scene review): grass `#74d44c`, grass lip `#57b93a`, earth `#d09050`, dark earth
-`#9c6435`, hero `#ff7a2f`, belly `#ffe3c2`, flag `#f2364a`, gold `#ffc93c`, pole `#f6f6f6`, sky top `#3f9bf0`, sky
-horizon `#cdeeff`.
+Exact colours are the implementer's choice inside these rules.
 
 ## 7. Screens and words
 
@@ -164,7 +172,7 @@ phone 375x667 with touch. These are emulated screens, not real devices, and repo
 
 | # | Check | How it is judged |
 |---|---|---|
-| C1 | `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` all exit 0 | CI `gate` on the pull request's head commit, full run |
+| C1 | `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` all exit 0 | run in the implementer's container, and the CI run on the draft pull request's head commit |
 | C2 | Layer rule: imports only go down, no cycles | `tests/architecture.test.ts` |
 | C3 | The course file matches section 3 and every gap is at most two thirds of the longest flat jump | unit test on the course data and tuning |
 | C4 | Jump heights, jump distance and determinism from section 4 | physics tests |
@@ -179,73 +187,46 @@ phone 375x667 with touch. These are emulated screens, not real devices, and repo
 
 Notes on the checks:
 
-- **C10, named hardware.** The cloud container has no graphics card (software drawing). The first attempt measured lit
-  surfaces at 37 to 52 ms a frame there and met the budget only with a lighter picture setting. That is a finding to
-  verify, not an instruction. Whatever the answer, the report states the machine, the picture setting measured and the
-  setting the screenshots show. A number for a real graphics card or a real phone is "not measured" until it is.
+- **C10, named hardware.** The cloud container, which has no graphics card (software drawing). Run A was measured the
+  same way with the same two numbers, so the results can be compared. If the game has more than one picture setting,
+  the report states the machine, the setting measured and the setting the screenshots show. A number for a real
+  graphics card or a real phone is "not measured" until it is.
 - **C10, the numbers.** The screen ticks every 16.67 ms, so single frames wobble around it; that is why the check is a
   mean plus a count of slow frames.
 - **Loading.** The game reports ready within 3 seconds on the computer profile in the cloud container (measured,
   reported, part of C10's output).
 
-## 9. Reviews each round (what no program can judge)
+## 9. Round 0 is done when
 
-Each is a fresh session that did not write the code. Each names the commit it examined and writes findings in the form
-in the `review` skill: a gap against this brief is red, an idea is a note.
-
-1. **Code review** (lane 2, `review` skill): the change against this brief and the codebase.
-2. **Scene look** (`scene-polish`), the scene "first-course" on each profile. It passes when each holds:
-   - **Visual hierarchy:** the eye goes first to the hero, then the next platform, then the flag.
-   - **Readable interactions:** at play speed you can tell where you can stand, where the edge is and where you will
-     land.
-   - **Consistent art direction:** colour, light, shapes and scale follow section 6 everywhere.
-   - **Motion:** animation reads clearly, with no stutter, pop or clipping.
-   - **Performance:** C10 holds.
-   - Also: the geometry and camera match sections 3 and 5, all words stay legible, and nothing the player needs is
-     hidden.
-3. **Playtest** (`scene-polish`, playtest and controls check): a fresh session plays off the scripted route with
-   keyboard and with touch on each profile, sound off. It judges the opening minute, control feel and challenge
-   against the quality bar in CLAUDE.md. Nothing may be unreachable, stuck or need explaining.
-4. **Words-and-design check and end-to-end walk** (`visual-check`) on the hints and the "You made it!" screen, on each
-   profile.
-5. **Blind A/B** (the bar, item 1): one session prepares two unlabelled sets, A and B, from `npm run capture` output
-   and stills of the reference's opening course, with the order chosen by coin flip and the key kept in a file the
-   judge is told not to open. A different fresh session sees only A and B and answers, for readability, game feel and
-   polish: which one is the amateur one, how sure (0 to 100%), and the single biggest tell. Ours passes an axis when
-   the judge picks the reference, or picks ours at 60% sure or less. The reference stills stay out of the repo and out
-   of anything published; they are for the comparison only. Limit, stated up front: the reference is famous, so a
-   judge may recognise it. The judge is told to judge craft, not fame.
-
-**The slice has reached the bar when** C1 to C12 pass on one commit, reviews 1 to 4 have no red finding left on that
-commit, and the blind A/B passes on all three axes. After 3 rounds the run stops whatever the result, and the report
-says which of these hold.
+- C1 to C12 pass on one commit, and the report names that commit.
+- One draft pull request is open from the implementer's branch to `main`, with these acceptance criteria and the
+  measured results in its body. It is not marked ready and not merged: run A stopped at the same point.
+- The report to the coordinator gives: the commit; each check as passed, failed or not run, with why; the frame-time
+  numbers and the machine; the screenshots and the clip; every material decision made and every value changed from
+  this brief, with the reason; known defects, labelled; and the time the build took, measured.
 
 ## 10. Boundaries
 
-- **Lane:** the implementation pull request is lane 2 (it touches `package.json` scripts, `vite.config.ts` and
-  `src/index.ts`). It merges after the full CI run on a ready pull request, the fresh code review and the visual
-  checks, with a merge commit. One implementation pull request for the whole slice; fixes land on it.
+- **Lane:** the pull request is lane 2 (it touches `package.json` scripts, `vite.config.ts` and `src/index.ts`).
+  Merging it would need the full CI run, a fresh code review and the visual checks. None of that is part of round 0.
 - **Dependencies:** only what `package.json` already has. Needing another one is an owner decision: stop and ask.
-- **Not in scope:** any change under `.github/` (automatic screenshots and video in CI are lane 3 and wait for the
-  owner); a public preview link; real phones, tablets or graphics cards; more courses.
+- **Not in scope:** any change under `.github/`; a public preview link; real phones, tablets or graphics cards; more
+  courses; goldens in `tests/golden/`; the scene art reference from `scene-polish`.
 - **Code rules that matter most here** (all from CLAUDE.md): code grouped by feature under `src/features/`, each
   feature added to the layer list in `tests/architecture.test.ts`; tests under `tests/` mirroring `src/`; injected
-  clocks and fixed seeds; comments say why.
-- **Golden:** when the scene passes its review, its screenshot becomes `tests/golden/first-course.png`, with the
-  before and after shown in the pull request.
-- **Records:** the implementer keeps `docs/superpowers/progress.md` current on its branch (timestamps from `date`)
-  unless the coordinator says it will. Screenshots and the clip go into one gallery page, labelled with the commit and
-  the picture setting, with unfinished work marked.
-- **Expected duration (an estimate, not measured):** round 1 build about 90 minutes; each judge-and-fix round about 45
-  minutes. A build that passes 3 hours is an overrun: reassess and report.
-- **Reference only:** the first attempt is on draft pull request #3 (commit 44d1f67). Ideas may be reused. The code is
-  rebuilt, not copied over.
+  clocks and fixed seeds; comments say why; the failing test comes first.
+- **Records:** the implementer writes its progress in the pull request body and its report. It leaves
+  `docs/superpowers/progress.md` alone unless the coordinator asks, because run A's notes are on another branch.
+  Screenshots and the clip go into one gallery page, labelled "run B", with the commit and the picture setting.
+- **Expected duration (an estimate, not measured):** about 90 minutes. Past 3 hours is an overrun: reassess and report.
 
-## 11. Open decisions
+## 11. After round 0 (not in this run)
 
-None block the build. Two are flagged for the owner, to be raised by the coordinator:
+If the owner continues run B, fresh sessions that did not write the code judge each round, at most 3 rounds: a code
+review (`review`), the scene look and the playtest (`scene-polish`: visual hierarchy, readable interactions,
+consistent art direction, motion, performance), the words-and-design check and end-to-end walk (`visual-check`), and a
+blind A/B against the reference in which the judge sees only two unlabelled sets.
 
-1. `scene-polish` step 2 makes the scene's art reference with GPT image generation ("reimagine this image"). If the
-   implementer's session has no such tool, the scene review judges against section 6 and the criteria in section 9
-   instead, and the report says the art reference was not made.
-2. Automatic screenshots and playtest video in CI need a `.github/` change (lane 3).
+## 12. Open decisions
+
+None block round 0.
