@@ -180,11 +180,10 @@ describe('sim', () => {
     it('lets go of the ground once the middle of the body is past the edge', () => {
       sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
       settle();
-      // One tap at a time, so the player creeps to the edge at z = -10.
+      // A slow creep, as a thumb barely off centre: the player edges out to the edge at z = -10.
       let lastGroundedZ = 0;
-      for (let i = 0; i < 400; i++) {
-        run(4, forward);
-        run(3, IDLE);
+      for (let i = 0; i < 2000; i++) {
+        sim.step({ moveX: 0, moveZ: -0.12, jump: false });
         const s = sim.snapshot();
         if (!s.grounded) break;
         lastGroundedZ = s.z;
@@ -196,11 +195,10 @@ describe('sim', () => {
     it('lets go of a corner the same way', () => {
       sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);
       settle();
-      // Walk to the back right corner (x = 3, z = 2) in small steps, then past it.
+      // Creep to the back right corner (x = 3, z = 2), then past it.
       let lastGrounded = { x: 0, z: 0 };
-      for (let i = 0; i < 600; i++) {
-        run(4, { moveX: 0.5, moveZ: 0.5, jump: false });
-        run(2, IDLE);
+      for (let i = 0; i < 2000; i++) {
+        sim.step({ moveX: 0.1, moveZ: 0.1, jump: false });
         const s = sim.snapshot();
         if (!s.grounded) break;
         lastGrounded = { x: s.x, z: s.z };
