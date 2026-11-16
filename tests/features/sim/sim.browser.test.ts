@@ -210,6 +210,34 @@ describe('sim', () => {
     });
   });
 
+  describe('lips', () => {
+    // A platform whose top is 0.2 m above the start's: a hero that only just fails to clear it is lifted on, not stopped.
+    const lip: Course = {
+      ...flat,
+      flag: { x: 0, y: 0.2, z: -20 },
+      platforms: [
+        { x: 0, y: 0, z: -3, width: 6, depth: 10, thickness: 1 },
+        { x: 0, y: 0.2, z: -13, width: 6, depth: 10, thickness: 1 },
+      ],
+    };
+
+    it('climbs onto a platform whose edge it hits just below the top', () => {
+      sim = createSim(lip, tuning);
+      settle();
+      run(120, forward);
+      const s = sim.snapshot();
+      expect(s.z).toBeLessThan(-9);
+      expect(s.y).toBeCloseTo(0.2, 1);
+    });
+
+    it('does not climb a wall that is higher than a lip', () => {
+      sim = createSim({ ...lip, platforms: [lip.platforms[0]!, { ...lip.platforms[1]!, y: 1 }] }, tuning);
+      settle();
+      run(120, forward);
+      expect(sim.snapshot().z).toBeGreaterThan(-8.3);
+    });
+  });
+
   describe('jump timing', () => {
     const edgeOf = (): number => {
       sim = createSim({ ...flat, flag: { x: 0, y: 0, z: -30 } }, tuning);

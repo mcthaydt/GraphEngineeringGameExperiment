@@ -55,6 +55,10 @@ const SKIN = 0.02;
 const SHADOW_REACH = 40;
 // A hard landing is felt and heard; touching down from a step or the spawn is not.
 const LANDING_MIN_SPEED = 3;
+// Hitting a platform's edge this far below its top lifts the hero on instead of stopping it dead.
+const LIP = 0.3;
+// How far ahead of the body the top of a lip is looked for: just past its radius.
+const LIP_REACH = 0.1;
 
 export function createSim(course: Course, tuning: Tuning): Sim {
   const { player: t } = tuning;
@@ -93,6 +97,12 @@ export function createSim(course: Course, tuning: Tuning): Sim {
   // Where the hero last stood: a fall is measured from here, so it takes as long from any platform.
   let standingY = course.start.y;
   let dropped = false;
+
+  /** Height of the top of the ground at a spot, looking down from `from`, or null if there is none within `reach`. */
+  function groundTopAt(x: number, z: number, from: number, reach: number): number | null {
+    const hit = physics.castRay(new RAPIER.Ray({ x, y: from, z }, down), reach, true, undefined, undefined, collider);
+    return hit ? from - hit.timeOfImpact : null;
+  }
 
   /** Distance down to the ground from the middle of the body, or null if there is none within `reach`. */
   function groundBelow(pos: { x: number; y: number; z: number }, reach: number): number | null {
@@ -167,6 +177,15 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     pos.x += moved.x;
     pos.y += moved.y;
     pos.z += moved.z;
+    const sideways = Math.hypot(wanted.x, wanted.z);
+    if (vel.y <= 0 && sideways > 1e-6 && Math.hypot(moved.x - wanted.x, moved.z - wanted.z) > 1e-5) {
+      const ahead = t.radius + LIP_REACH;
+      const top = groundTopAt(pos.x + (wanted.x / sideways) * ahead, pos.z + (wanted.z / sideways) * ahead, pos.y + LIP + 0.1, LIP + 0.1 + 0.05);
+      if (top !== null && top - pos.y > -SKIN / 2 && top - pos.y <= LIP) {
+        pos.y = top + SKIN;
+        vel.y = 0;
+      }
+    }
     // Resting on a platform's lip with the middle of the body in the air is not standing: it slides off instead of hovering.
     const resting = controller.computedGrounded() && vel.y <= 0;
     h.grounded = resting && groundBelow(pos, 0.3) !== null;
