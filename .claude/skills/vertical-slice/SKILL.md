@@ -67,14 +67,15 @@ The lead agent runs on Fable at medium effort and never writes code: it plans, l
 ## From the slice to the game
 
 - The slice is the game's first version, not a throwaway. When it is finished, the owner approves it as a finished
-  result and the stages start, with the slice as the spec's starting point.
+  result and later work starts from it. Each piece of later work takes the short or the staged path by its own risk, with
+  the slice as the starting point of its brief.
 - It evolves by default. Assess it first: for each part, keep, refactor or replace, with a reason, written into the
-  spec. Refactor or replace a part only for a constraint shown by evidence: a test it cannot take, a measured budget it
+  brief. Refactor or replace a part only for a constraint shown by evidence: a test it cannot take, a measured budget it
   misses, a defect its structure keeps causing. Code not fitting the folder layout alone never justifies replacing
   working gameplay; it moves into the layout as it is touched. Behavior is preserved by repeatable playthroughs and
   recorded parameters with their units (speeds per second, sizes in pixels or metres, timings in milliseconds), not by
   copying numbers alone.
-- Before a part is replaced, the spec names a runnable baseline when one helps: a commit the playtest runs on, to
+- Before a part is replaced, the brief names a runnable baseline when one helps: a commit the playtest runs on, to
   compare the new part against.
 - The coordinator and the owner agree a delivery order: a short list of milestones in
   `docs/superpowers/decompositions/<date>-<topic>-delivery-order.md`. Milestone 0 is the slice. Each milestone gets its
