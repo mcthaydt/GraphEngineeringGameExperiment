@@ -9,15 +9,24 @@ export const PALETTE = {
   dirt: 0xd09050,
   dirtDark: 0x9c6435,
   hero: 0xff7a2f,
-  heroDark: 0x5a3320,
+  /** The second colour: a cap, a backpack and boots in deep violet, which no grass, earth or sky is close to. */
+  heroViolet: 0x5a3fd6,
+  heroBoot: 0x3b2a96,
+  heroOutline: 0x2a1950,
   heroBelly: 0xffe3c2,
+  cream: 0xfff0d6,
+  blush: 0xff9aa8,
   eye: 0xffffff,
   pupil: 0x1c1c28,
   pole: 0xf6f6f6,
   flag: 0xf2364a,
   gold: 0xffc93c,
-  dust: 0xffffff,
-  shadow: 0x10202c,
+  /** A pale warm grey: pure white blows out against the sky. */
+  dust: 0xf1e6d2,
+  dustRing: 0xfff4de,
+  starGold: 0xffd44a,
+  /** A dark green, so the shadow blends into the grass instead of sitting on it like a blue-black sticker. */
+  shadow: 0x17331f,
 } as const;
 
 /** The sky is painted in CSS behind the see-through canvas: top, eye level, far below. */
