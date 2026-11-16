@@ -42,6 +42,7 @@ export function createScene(course: Course, tuning: Tuning): Scene {
   // Where the hero was last drawn, so an exit puff can go there.
   let shown = { x: course.start.x, y: course.start.y, z: course.start.z };
   let hops = 0;
+  let skids = 0;
 
   return {
     view,
@@ -78,6 +79,8 @@ export function createScene(course: Course, tuning: Tuning): Scene {
       effects.update(dt);
       if (hero.hops() > hops) effects.sparkle(pose.x, pose.y, pose.z);
       hops = hero.hops();
+      if (hero.skids() > skids) effects.skid(pose.x, now.groundY ?? pose.y, pose.z);
+      skids = hero.skids();
       shown = { x: pose.x, y: pose.y, z: pose.z };
 
       if (snapCamera) rig.snap(pose);

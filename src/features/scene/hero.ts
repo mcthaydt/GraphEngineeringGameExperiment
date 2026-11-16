@@ -1,6 +1,7 @@
-import { Container3D, FlatMaterial, Material3D, Mesh3D, SphereGeometry } from '@pixi/3d';
+import { Container3D, FlatMaterial, Geometry3D, Mesh3D } from '@pixi/3d';
 import { clamp, damp, dampAngle } from '../../lib/maths';
-import { blink, cheerPose, easeOutBack, HOP_EVERY, spring, stepSpring, stepTumble } from './motion';
+import { bakeShapes, type Shape } from './figure';
+import { blink, brake, breath, cheerPose, easeOutBack, HOP_EVERY, runPose, spring, stepBrake, stepSpring, stepTumble, strideRate } from './motion';
 import { PALETTE } from './palette';
 
 export interface HeroPose {
@@ -30,6 +31,8 @@ export interface HeroView {
   lift(): number;
   /** How many victory hops have started, so the scene can add a sparkle to each. */
   hops(): number;
+  /** How many hard stops or turn-arounds have started, so the scene can add dust to each. */
+  skids(): number;
 }
 
 /** The whole hero is drawn a bit bigger than the body that collides, so it has presence on screen. */
@@ -41,6 +44,9 @@ const ARRIVE_SECONDS = 0.45;
  * Pip: a round orange fellow in a violet cap and backpack, built from simple shapes. The origin is at the feet and
  * the front faces +z. The game mostly shows its back, so the back is the designed side: a cap with a pom, a
  * striped backpack and a wagging tail, in a second colour that no grass, earth or sky is near.
+ *
+ * Each part that moves on its own is one mesh with its shapes, light and outline baked in (see `figure.ts`): nine
+ * draw calls for the whole hero, because separate lit shapes were what made the game slow.
  */
 export function createHero(): HeroView {
   const node = new Container3D({ label: 'hero' });
@@ -50,99 +56,89 @@ export function createHero(): HeroView {
   spin.addChild(body);
   node.addChild(spin);
 
-  const lit = (color: number, roughness = 0.55): Material3D => new Material3D({ baseColor: color, roughness });
-  const skin = lit(PALETTE.hero);
-  const violet = lit(PALETTE.heroViolet, 0.5);
-  const boot = lit(PALETTE.heroBoot, 0.6);
-  const cream = lit(PALETTE.cream, 0.6);
-  const white = lit(PALETTE.eye, 0.25);
-  const black = lit(PALETTE.pupil, 0.25);
-  const outline = new FlatMaterial({ baseColor: PALETTE.heroOutline });
-  // Only the far side of a slightly bigger copy shows, which draws a dark line round the silhouette.
-  outline.state.cullMode = 'front';
-
-  const sphere = new SphereGeometry({ radius: 1, widthSegments: 20, heightSegments: 14 });
-  const part = (
-    parent: Container3D,
-    material: Material3D,
-    x: number,
-    y: number,
-    z: number,
-    sx: number,
-    sy = sx,
-    sz = sx,
-    line = false,
-  ): Mesh3D => {
-    const mesh = new Mesh3D({ geometry: sphere, material, position: { x, y, z }, scale: { x: sx, y: sy, z: sz } });
-    if (line) {
-      parent.addChild(
-        new Mesh3D({
-          geometry: sphere,
-          material: outline,
-          position: { x, y, z },
-          scale: { x: sx + OUTLINE, y: sy + OUTLINE, z: sz + OUTLINE },
-          castShadow: false,
-          receiveShadow: false,
-        }),
-      );
-    }
-    parent.addChild(mesh);
-    return mesh;
+  const material = new FlatMaterial({ baseColor: 0xffffff, vertexColors: true });
+  const mesh = (parent: Container3D, shapes: readonly Shape[], at = { x: 0, y: 0, z: 0 }): Mesh3D => {
+    const baked = bakeShapes(shapes, PALETTE.heroOutline, OUTLINE);
+    const made = new Mesh3D({
+      geometry: new Geometry3D({ positions: baked.positions, colors: baked.colors, indices: baked.indices }),
+      material,
+      position: at,
+      castShadow: false,
+      receiveShadow: false,
+    });
+    parent.addChild(made);
+    return made;
   };
-
-  // The body and its face.
-  part(body, skin, 0, 0.62, 0, 0.46, 0.5, 0.44, true);
-  part(body, cream, 0, 0.44, 0.27, 0.3, 0.28, 0.17);
-  const eyes = [-1, 1].map((side) => {
-    const eye = new Container3D({ position: { x: side * 0.15, y: 0.73, z: 0 } });
-    part(eye, white, 0, 0, 0.34, 0.125, 0.155, 0.1);
-    part(eye, black, side * 0.01, 0, 0.405, 0.065, 0.09, 0.05);
-    part(eye, white, side * 0.01 - 0.02, 0.045, 0.44, 0.025);
-    body.addChild(eye);
-    return eye;
+  const ball = (x: number, y: number, z: number, sx: number, sy: number, sz: number, color: number, rest: Partial<Shape> = {}): Shape => ({
+    x,
+    y,
+    z,
+    sx,
+    sy,
+    sz,
+    color,
+    ...rest,
   });
-  for (const side of [-1, 1]) part(body, lit(PALETTE.blush, 0.8), side * 0.28, 0.58, 0.34, 0.07, 0.045, 0.03);
-  const mouth = part(body, black, 0, 0.56, 0.425, 0.06, 0.03, 0.03);
 
-  // The cap, its brim and pom: violet and cream on top of orange, so the head reads from every side.
-  const cap = new Container3D();
-  part(cap, violet, 0, 1.0, 0, 0.42, 0.27, 0.41, true);
-  part(cap, cream, 0, 0.93, 0, 0.44, 0.06, 0.43);
-  part(cap, violet, 0, 0.925, 0.36, 0.23, 0.04, 0.17);
+  // The body, its belly and cheeks, the cap with its brim, and the pack: all still, so one mesh. The cap is violet
+  // and cream on top of orange so the head reads from every side; the pack is what the player sees most.
+  mesh(body, [
+    ball(0, 0.62, 0, 0.46, 0.5, 0.44, PALETTE.hero, { line: true }),
+    ball(0, 0.44, 0.27, 0.3, 0.28, 0.17, PALETTE.cream),
+    ball(-0.28, 0.58, 0.34, 0.07, 0.045, 0.03, PALETTE.blush),
+    ball(0.28, 0.58, 0.34, 0.07, 0.045, 0.03, PALETTE.blush),
+    ball(0, 1.0, 0, 0.42, 0.27, 0.41, PALETTE.heroViolet, { line: true }),
+    ball(0, 0.93, 0, 0.44, 0.06, 0.43, PALETTE.cream),
+    ball(0, 0.925, 0.36, 0.23, 0.04, 0.17, PALETTE.heroViolet),
+    ball(0, 0.52, -0.42, 0.26, 0.28, 0.18, PALETTE.heroViolet, { line: true }),
+    ball(0, 0.58, -0.42, 0.27, 0.05, 0.19, PALETTE.cream),
+  ]);
+
+  // Both eyes blink together, so they share a mesh that squashes about the eye line.
+  const eyes = new Container3D({ position: { x: 0, y: 0.73, z: 0 } });
+  mesh(
+    eyes,
+    [-1, 1].flatMap((side) => [
+      ball(side * 0.15, 0, 0.34, 0.125, 0.155, 0.1, PALETTE.eye),
+      ball(side * 0.15 + side * 0.01, 0, 0.405, 0.065, 0.09, 0.05, PALETTE.pupil, { lit: false }),
+      ball(side * 0.15 + side * 0.01 - 0.02, 0.045, 0.44, 0.025, 0.025, 0.025, PALETTE.eye, { lit: false }),
+    ]),
+  );
+  body.addChild(eyes);
+  const mouth = mesh(body, [ball(0, 0, 0, 1, 1, 1, PALETTE.pupil, { lit: false })], { x: 0, y: 0.56, z: 0.425 });
+
   const pom = new Container3D({ position: { x: 0, y: 1.28, z: 0 } });
-  part(pom, cream, 0, 0, 0, 0.11, 0.11, 0.11, true);
-  cap.addChild(pom);
-  body.addChild(cap);
-
-  // The pack and tail: what the player sees most.
-  const pack = new Container3D();
-  part(pack, violet, 0, 0.52, -0.42, 0.26, 0.28, 0.18, true);
-  part(pack, cream, 0, 0.58, -0.42, 0.27, 0.05, 0.19);
-  body.addChild(pack);
+  mesh(pom, [ball(0, 0, 0, 0.11, 0.11, 0.11, PALETTE.cream, { line: true })]);
+  body.addChild(pom);
   const tail = new Container3D({ position: { x: 0, y: 0.3, z: -0.4 } });
-  part(tail, cream, 0, 0, -0.1, 0.12, 0.12, 0.12, true);
+  mesh(tail, [ball(0, 0, -0.1, 0.12, 0.12, 0.12, PALETTE.cream, { line: true })]);
   body.addChild(tail);
 
   // Arms hang from the shoulders, so the hands always stay joined to the body.
   const arms = [-1, 1].map((side) => {
     const arm = new Container3D({ position: { x: side * 0.4, y: 0.74, z: 0 } });
-    part(arm, skin, side * 0.05, -0.11, 0, 0.1, 0.16, 0.1, true);
-    part(arm, cream, side * 0.09, -0.24, 0, 0.14, 0.14, 0.14, true);
+    mesh(arm, [
+      ball(side * 0.05, -0.11, 0, 0.1, 0.16, 0.1, PALETTE.hero, { line: true }),
+      ball(side * 0.09, -0.24, 0, 0.14, 0.14, 0.14, PALETTE.cream, { line: true }),
+    ]);
     body.addChild(arm);
     return arm;
   });
 
   const feet = [-1, 1].map((side) => {
     const foot = new Container3D({ position: { x: side * 0.2, y: 0.12, z: 0.04 } });
-    part(foot, boot, 0, 0, 0.02, 0.17, 0.12, 0.24, true);
+    mesh(foot, [ball(0, 0, 0.02, 0.17, 0.12, 0.24, PALETTE.heroBoot, { line: true })]);
     node.addChild(foot);
     return foot;
   });
 
-  let stride = 0;
+  let cycles = 0;
+  let runAmount = 0;
+  let idleAmount = 0;
   const squash = spring(0); // above 0 is squashed flat, below 0 is stretched tall
   const pomSway = { x: spring(0), z: spring(0) };
   const tumble = { falling: 0, angle: 0 };
+  const skid = brake();
   let cheering = false;
   let cheerClock = 0;
   let clock = 0;
@@ -172,45 +168,56 @@ export function createHero(): HeroView {
       node.scale.set(size, size, size);
       spin.rotation.set(tumble.angle * 0.35, 0, tumble.angle);
 
+      // The run eases in and out, so the sway and roll do not snap on at the first step.
+      const running = pose.grounded && speed > 0.5;
+      runAmount = damp(runAmount, running ? 1 : 0, 14, dt);
+      idleAmount = damp(idleAmount, pose.grounded && !running && !cheering ? 1 : 0, 6, dt);
+      if (running) cycles += strideRate(speed) * dt;
+      const run = runPose(cycles, speed);
+      stepBrake(skid, speed, pose.grounded, dt);
+
       // A damped spring: landings and take-offs wobble once and settle.
       stepSpring(squash, 0, 260, 16, dt);
       const air = pose.grounded ? 0 : clamp(pose.vy * 0.018, -0.2, 0.22);
-      const tall = 1 - squash.value + air;
+      const tall = 1 - squash.value + air + breath(clock) * idleAmount;
       const wide = 1 / Math.sqrt(Math.max(0.4, tall));
       body.scale.set(wide, tall, wide);
 
-      const running = pose.grounded && speed > 0.5;
-      stride += speed * dt * 1.9;
-      const swing = running ? Math.sin(stride * Math.PI) : 0;
-      const bob = running ? Math.abs(Math.cos(stride * Math.PI)) * 0.06 : 0;
-      body.position.y = -0.6 + bob;
-      body.rotation.x = damp(body.rotation.x, clamp(speed * 0.035, 0, 0.3) + (pose.grounded ? 0 : -pose.vy * 0.012), 12, dt);
+      body.position.set(run.sway * runAmount, -0.6 + run.bob * runAmount, 0);
+      body.rotation.y = run.yaw * runAmount;
+      body.rotation.z = run.roll * runAmount;
+      const lean = clamp(speed * 0.035, 0, 0.3) + (pose.grounded ? 0 : -pose.vy * 0.012) - skid.tilt * 0.55;
+      body.rotation.x = damp(body.rotation.x, lean, 12, dt);
 
       // The pom and the backpack lag behind a move, then swing back.
       stepSpring(pomSway.x, clamp(-pose.vx * 0.025, -0.2, 0.2), 140, 7, dt);
       stepSpring(pomSway.z, clamp(-pose.vy * 0.012 - speed * 0.01, -0.2, 0.2), 140, 7, dt);
       pom.position.set(pomSway.x.value, 1.28 + Math.min(0, pomSway.z.value) * 0.3, pomSway.z.value);
-      tail.rotation.y = Math.sin(clock * (running ? 14 : 5)) * (running ? 0.7 : 0.35);
-      tail.position.y = 0.3 + (running ? Math.abs(Math.cos(stride * Math.PI)) * 0.03 : 0);
+      tail.rotation.y = Math.sin(clock * (running ? 9 : 5)) * (running ? 0.7 : 0.35);
+      tail.position.y = 0.3 + (running ? Math.abs(run.step) * 0.03 : 0);
 
       const shut = blink(clock);
-      for (const eye of eyes) eye.scale.set(1, 1 - shut * 0.9, 1);
+      eyes.scale.set(1, 1 - shut * 0.9, 1);
       const open = cheering || !pose.grounded ? 1 : 0;
       mouth.scale.set(0.06 + open * 0.025, 0.03 + open * 0.06, 0.03);
 
       feet.forEach((foot, i) => {
         const side = i === 0 ? -1 : 1;
-        const phase = swing * side;
-        // In the air the feet tuck up; on the ground they step.
-        foot.position.set(side * 0.2, pose.grounded ? 0.12 + Math.max(0, phase) * 0.14 : 0.26, pose.grounded ? 0.04 + phase * 0.26 : 0.04 - 0.1 * side);
+        // In the air the feet tuck up; on the ground they step, one rising while the other plants.
+        const lift = Math.max(0, side * run.rise) * run.footLift * runAmount;
+        foot.position.set(
+          side * 0.2 + run.sway * runAmount * 0.5,
+          pose.grounded ? 0.12 + lift : 0.26,
+          pose.grounded ? 0.04 + side * run.step * run.footReach * runAmount : 0.04 - 0.1 * side,
+        );
       });
       arms.forEach((arm, i) => {
         const side = i === 0 ? -1 : 1;
-        // Arms swing with the stride; they go up when the hero jumps, falls or cheers.
+        // Arms swing with the stride, forward and back and out to the sides; they go up when the hero jumps, falls or cheers.
         const flail = falling ? Math.sin(clock * 24 + i * 2) * 0.5 : 0;
-        const up = cheering || !pose.grounded ? 2.5 + flail : 0.12;
+        const up = cheering || !pose.grounded ? 2.5 + flail : Math.max(0.05, 0.2 + side * run.armSide * runAmount);
         arm.rotation.z = -side * up;
-        arm.rotation.x = running ? -swing * side * 0.9 : 0;
+        arm.rotation.x = -side * run.armSwing * runAmount;
       });
     },
     land(speed) {
@@ -230,8 +237,12 @@ export function createHero(): HeroView {
       tumble.angle = 0;
       squash.value = 0;
       squash.velocity = 0;
+      skid.speed = 0;
+      skid.tilt = 0;
+      skid.hold = 0;
     },
     lift: () => lifted,
     hops: () => hopsStarted,
+    skids: () => skid.count,
   };
 }
