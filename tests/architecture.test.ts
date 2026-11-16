@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // Lowest first. A unit may import only from units earlier in this list (or itself).
-const LAYERS = ['lib'] as const;
+const LAYERS = ['lib', 'tuning', 'course', 'sim', 'input', 'sound', 'scene', 'screens', 'game'] as const;
 
 const SRC = resolve(import.meta.dirname, '../src');
 

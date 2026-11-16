@@ -1,0 +1,13 @@
+/* One look for every word on screen: round system font, white on a dark blue pill, one yellow button. */
+.hud,
+.failure {
+  --ui-font: ui-rounded, 'SF Pro Rounded', Nunito, 'Varela Round', 'Arial Rounded MT Bold', 'Hiragino Maru Gothic ProN', 'Trebuchet MS',
+    'Segoe UI', system-ui, sans-serif;
+  /* Nearly solid, so the words stay readable on a white cloud as well as on the sky. */
+  --pill: rgb(16 44 94 / 90%);
+  --ink: #1d3557;
+  --gold: #ffc93c;
+  --gold-deep: #d9931a;
+  --gold-text: #4a2a00;
+  font-family: var(--ui-font);
+}
