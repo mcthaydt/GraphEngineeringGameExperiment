@@ -152,9 +152,10 @@ reports into one owner-facing update. Otherwise the implementer handles these du
   review; a reviewer may read and run checks and write its audit file, and the implementer makes fixes. The vertical-slice
   lead asks the coordinator for its builder and critic threads. All these threads count toward the work-session limits in
   Settings, and builders count toward the writer limit. Reviewers do not delegate further.
-- **Fable never writes code.** A Fable model only plans, leads and judges. Builders and critics run as separate
-  threads on Sonnet, high effort, started by the coordinator from a self-contained brief, never as subagents inside a
-  Fable lead. This holds for the vertical-slice lead too.
+- **Fable orchestrates.** It plans, briefs, judges and integrates, and Sonnet builds. Fable touches code only to
+  integrate or unblock, such as merge conflicts or wiring pieces together, never to build a piece. Builders and critics
+  are threads on Sonnet, high effort, started by the coordinator from a self-contained brief, not subagents. This holds
+  for the vertical-slice lead too.
 
 ## Risk
 
@@ -338,4 +339,4 @@ Change a number or a model here and nowhere else.
 - Models and effort: a session whose model and effort are not named runs on Opus, medium. Nothing runs above high
   effort. Plan: Fable 5.2, medium. Plan audit: Opus, medium. Execution (and its fixes): Sonnet, high. Implementation
   audit: Opus, medium. Advisor: Fable 5.2, medium. Scene review: Opus, high. Slice lead: Fable 5.2, medium; slice
-  builders and critics: Sonnet, high. Fable never writes code (see Delegation).
+  builders and critics: Sonnet, high. Fable orchestrates and Sonnet builds (see Delegation).
