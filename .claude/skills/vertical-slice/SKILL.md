@@ -51,7 +51,7 @@ Each critic must inspect the real output, compare it directly with the bar—usi
 
 Have the lead agent keep the existing progress record current and send early playable previews and material decisions to the coordinator, following the owner visibility rules.
 
-The lead agent runs on Fable at medium effort and never writes code: it plans, leads and judges. Every builder and critic is a separate session on Sonnet at high effort, started by the coordinator from a self-contained brief (goal, files, acceptance check, branch), never a subagent inside the lead. Do not prescribe the architecture, exact decomposition, or a fixed number of rounds. Keep the final prompt short, just like Matt's.
+The lead orchestrates. It runs on Fable at medium effort, splits the work and writes a self-contained brief (goal, files, acceptance check, branch) for each builder and critic, and the coordinator starts each one as its own thread on Sonnet high. The lead's first step is sending builder briefs, not building. It touches code only to integrate or unblock, such as merge conflicts or wiring pieces together, never to build a piece. Do not prescribe the architecture, exact decomposition, or a fixed number of rounds. Keep the final prompt short, just like Matt's.
 
 - `[GOAL]` is the game's one-line pitch and core loop, from the owner. `[OPTIONAL REFERENCES]` are the owner's reference
   games or screenshots, if any.
@@ -62,7 +62,7 @@ The lead agent runs on Fable at medium effort and never writes code: it plans, l
   enough, the owner's computer only when the slice needs a GPU or real input feel. Its builders and critics are separate
   threads that follow the Delegation rule and session limits; required reviews are separate threads too.
 - The slice lead is tracked like a stage: it reports to the coordinator, which keeps `progress.md`, one line per piece
-  finished. The lead writes no code (Fable never writes code); its builders count as writing code.
+  finished. The lead orchestrates and does not build pieces; its builders count as writing code.
 
 ## From the slice to the game
 
