@@ -4,6 +4,7 @@ import { createStepper, STEP_SECONDS } from '../../lib/steps';
 import { loadFirstCourse } from '../course/course';
 import { createInput } from '../input/input';
 import { createScene, pickQuality, SKY_CSS, type Quality } from '../scene/scene';
+import { createHints } from '../screens/hints';
 import { createScreens, prefersTouch } from '../screens/screens';
 import { createSim, type Snapshot } from '../sim/sim';
 import { createSound } from '../sound/sound';
@@ -78,11 +79,20 @@ const boot = (options: GameOptions): Effect.Effect<Game, BootError> =>
     let before = sim.snapshot();
     let now = before;
     let lastFrame: number | undefined;
+    const hints = createHints(screens.ui, course.start);
+
+    /** Nothing may keep moving the hero after a win, a fall or Play again: the player has to press again. */
+    function letGo(): void {
+      input.clear();
+      screens.ui.letGo++;
+    }
 
     function restart(): void {
       sim.restart();
       stepper.reset();
       before = now = sim.snapshot();
+      letGo();
+      hints.reset(course.start);
       screens.ui.won = false;
       scene.react([{ type: 'fall' }], now);
     }
@@ -90,16 +100,24 @@ const boot = (options: GameOptions): Effect.Effect<Game, BootError> =>
     function frame(elapsedMs: number): void {
       const steps = stepper.feed(elapsedMs);
       for (let i = 0; i < steps; i++) {
-        const events = sim.step(input.read());
+        const intent = input.read();
+        const events = sim.step(intent);
         before = now;
         now = sim.snapshot();
         scene.react(events, now);
+        hints.step(STEP_SECONDS, now, intent.moveX !== 0 || intent.moveZ !== 0 || intent.jump);
         for (const event of events) {
           sound?.play(event);
-          if (event.type === 'jump') screens.ui.showJumpHint = false;
-          if (event.type === 'win') screens.ui.won = true;
+          if (event.type === 'jump') hints.jumped();
+          if (event.type === 'fall') {
+            letGo();
+            hints.fell(course.start);
+          }
+          if (event.type === 'win') {
+            letGo();
+            screens.ui.won = true;
+          }
         }
-        if (Math.hypot(now.x - course.start.x, now.z - course.start.z) > 2) screens.ui.showMoveHint = false;
       }
       scene.draw(before, now, stepper.alpha, elapsedMs / 1000, app.screen.width / Math.max(1, app.screen.height));
     }

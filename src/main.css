@@ -14,10 +14,58 @@ body {
 #game canvas {
   display: block;
 }
-.sorry {
-  margin: 0;
-  padding: 20vh 24px;
-  text-align: center;
-  font: 800 clamp(22px, 5vmin, 36px) 'Trebuchet MS', system-ui, sans-serif;
+/* Shown by the page itself until the game says it is ready, or could not start. */
+.loading {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px 16px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgb(16 44 94 / 90%);
   color: #fff;
+  font:
+    900 clamp(24px, 5vmin, 36px) ui-rounded,
+    'SF Pro Rounded',
+    Nunito,
+    'Varela Round',
+    'Arial Rounded MT Bold',
+    'Hiragino Maru Gothic ProN',
+    'Trebuchet MS',
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
+.loading span {
+  margin-right: 6px;
+}
+.loading i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffc93c;
+  animation: bounce 1s ease-in-out infinite;
+}
+.loading i:nth-of-type(2) {
+  animation-delay: 0.15s;
+}
+.loading i:nth-of-type(3) {
+  animation-delay: 0.3s;
+}
+body[data-ready] .loading {
+  display: none;
+}
+@keyframes bounce {
+  50% {
+    transform: translateY(-9px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading i {
+    animation: none;
+  }
 }
