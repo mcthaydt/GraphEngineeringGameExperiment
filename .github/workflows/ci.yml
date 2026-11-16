@@ -8,7 +8,8 @@ on:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Only pull request runs cancel each other, so every push to main is tested.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -31,9 +32,9 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if [ "$EVENT" = "pull_request" ]; then
-            changed=$(git diff --name-only "$BASE"...HEAD)
+            changed=$(git diff --no-renames --name-only "$BASE"...HEAD)
           elif git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            changed=$(git diff --name-only "$BASE" HEAD)
+            changed=$(git diff --no-renames --name-only "$BASE" HEAD)
           else
             changed=$(git ls-files)
           fi
@@ -80,7 +81,11 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           if [ "$FULL" = true ]; then npx vitest run --project unit
-          else npx vitest run --project unit --changed "$BASE" --bail 1 --passWithNoTests; fi
+          else
+            # The layer rule reads src/ from disk, so --changed never picks it; it is cheap, so always run it.
+            npx vitest run tests/architecture.test.ts --bail 1
+            npx vitest run --project unit --changed "$BASE" --bail 1 --passWithNoTests
+          fi
 
   browser:
     needs: changes
