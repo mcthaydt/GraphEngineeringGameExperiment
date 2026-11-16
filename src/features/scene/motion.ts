@@ -275,3 +275,102 @@ export function stepTumble(t: { falling: number; angle: number }, falling: boole
   t.falling += dt;
   if (t.falling > TUMBLE_AFTER) t.angle += (7 + (t.falling - TUMBLE_AFTER) * 14) * dt;
 }
+
+export interface RunPose {
+  /** Which foot is forward: -1 to 1. */
+  step: number;
+  /** How high the body rises over the step, in metres. */
+  bob: number;
+  /** Side to side shift of the hips, in metres. */
+  sway: number;
+  /** Side to side roll of the body, in radians. */
+  roll: number;
+  /** Small turn left and right of the shoulders, in radians. */
+  yaw: number;
+  /** How far the arms swing forward and back, in radians. */
+  armSwing: number;
+  /** How far the arms swing out sideways, in radians. */
+  armSide: number;
+  /** How far the feet reach forward and back, in metres. */
+  footReach: number;
+  /** Which foot is rising: -1 to 1, a quarter stride after `step`. */
+  rise: number;
+  /** How high the rising foot lifts, in metres. */
+  footLift: number;
+}
+
+/** Full strides a second. From behind the eye can only follow this if it is slow enough: about 3.4 at top speed. */
+export const strideRate = (speed: number): number => 0.6 + speed * 0.4;
+
+/** The run from behind has to show in sway, roll and bounce, since feet swinging along the view axis do not. */
+export function runPose(cycles: number, speed: number): RunPose {
+  const power = clamp(speed / 7, 0.35, 1);
+  const wave = Math.sin(cycles * Math.PI * 2);
+  const bounce = Math.abs(Math.cos(cycles * Math.PI * 2));
+  return {
+    step: wave,
+    bob: bounce * 0.12 * power,
+    sway: wave * 0.06 * power,
+    roll: wave * 0.12 * power,
+    yaw: wave * 0.08 * power,
+    armSwing: wave * 0.9 * power,
+    armSide: wave * 0.35 * power,
+    footReach: wave * 0.26 * power,
+    rise: Math.cos(cycles * Math.PI * 2),
+    footLift: 0.25 * power,
+  };
+}
+
+/** A slow rise and fall of the chest for when the hero stands still, as a share of its height. */
+export const breath = (clock: number): number => Math.sin(clock * 1.8) * 0.018;
+
+export interface Brake {
+  /** Ground speed last frame. */
+  speed: number;
+  /** 0 to 1: how far the body has tipped back. */
+  tilt: number;
+  /** Seconds the tip stays asked for. */
+  hold: number;
+  /** Seconds before another puff of dust may start. */
+  rest: number;
+  /** How many hard stops have started. */
+  count: number;
+}
+
+export const brake = (): Brake => ({ speed: 0, tilt: 0, hold: 0, rest: 0, count: 0 });
+
+const BRAKE_DECEL = 25;
+const BRAKE_FROM = 3;
+
+/** A hard stop or turn-around on the ground tips the body back for a moment and counts one skid. */
+export function stepBrake(b: Brake, speed: number, grounded: boolean, dt: number): void {
+  b.rest = Math.max(0, b.rest - dt);
+  b.hold = Math.max(0, b.hold - dt);
+  if (dt > 1e-4 && grounded && b.speed > BRAKE_FROM && (b.speed - speed) / dt > BRAKE_DECEL) {
+    b.hold = 0.22;
+    if (b.rest === 0) {
+      b.count++;
+      b.rest = 0.3;
+    }
+  }
+  b.speed = speed;
+  b.tilt += ((b.hold > 0 ? 1 : 0) - b.tilt) * (1 - Math.exp(-18 * dt));
+}
+
+/** Two puffs kicked out sideways from the feet when the hero skids. */
+export function skidDust(x: number, y: number, z: number): Bit[] {
+  return [-1, 1].map((side) =>
+    bit('puff', x + side * 0.25, y + 0.14, z, {
+      vx: side * 1.8,
+      vy: 0.5,
+      vz: 0.3,
+      drag: 4,
+      life: 0.4,
+      size0: 0.2,
+      size1: 0.42,
+      alpha: 0.75,
+      spin: side,
+      color: PALETTE.dust,
+    }),
+  );
+}

@@ -7,6 +7,7 @@ import {
   confettiBurst,
   FRAME,
   landingDust,
+  skidDust,
   shadowLook,
   stepBit,
   takeoffDust,
@@ -19,6 +20,8 @@ export interface Effects {
   readonly node: Container3D;
   /** The soft round shadow under the player: the main cue for where a jump will land. */
   shadow(x: number, z: number, groundY: number | null, height: number): void;
+  /** A pair of puffs kicked out at the feet by a hard stop or turn-around. */
+  skid(x: number, y: number, z: number): void;
   takeoff(x: number, y: number, z: number): void;
   land(x: number, y: number, z: number, speed: number): void;
   confetti(x: number, y: number, z: number): void;
@@ -161,6 +164,7 @@ export function createEffects(): Effects {
         ground.container.setParticleAt(0, x, groundY + 0.04, z, 1.55 * look.scale, 0, PALETTE.shadow, look.alpha, FRAME.shade);
       }
     },
+    skid: (x, y, z) => add(skidDust(x, y, z)),
     takeoff: (x, y, z) => add(takeoffDust(x, y, z)),
     land: (x, y, z, speed) => add(landingDust(x, y, z, speed)),
     confetti: (x, y, z) => add(confettiBurst(x, y, z)),
