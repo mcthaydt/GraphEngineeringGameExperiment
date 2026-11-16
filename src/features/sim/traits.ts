@@ -13,6 +13,8 @@ export const Hero = trait({
   jumpHeld: false,
   /** True from take-off until the jump is cut short or the peak is passed. */
   rising: false,
+  /** Resting on the lip of a platform with the middle of the body in the air: not standing, but a jump still works. */
+  hooked: false,
 });
 
 export const Slab = trait({ width: 1, depth: 1, thickness: 1 });

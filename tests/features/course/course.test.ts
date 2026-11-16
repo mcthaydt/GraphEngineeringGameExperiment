@@ -21,7 +21,9 @@ describe('course', () => {
       const airTime = jump_speed / gravity + Math.sqrt((2 * (peak - rise)) / fall_gravity);
       const gapX = Math.max(0, Math.abs(to.x - from.x) - (to.width + from.width) / 2);
       const gapZ = Math.max(0, Math.abs(to.z - from.z) - (to.depth + from.depth) / 2);
-      expect(Math.hypot(gapX, gapZ), `gap before platform ${i}`).toBeLessThan(run_speed * airTime * 0.75);
+      // Every gap leaves room for a late or early press, and the last leap, the hardest, leaves a little.
+      const room = i === course.platforms.length - 1 ? 0.95 : 0.75;
+      expect(Math.hypot(gapX, gapZ), `gap before platform ${i}`).toBeLessThan(run_speed * airTime * room);
     });
   });
 

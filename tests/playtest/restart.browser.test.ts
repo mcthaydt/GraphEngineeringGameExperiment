@@ -5,8 +5,8 @@ import { startGame, type Game } from '../../src/index';
 import { createAutopilot, type Wish } from './autopilot';
 import { KEYS, pressKeys } from './drive';
 
-// After a win or a fall the hero must stand still until the player does something new, even if a
-// key or a thumb is still down from before.
+// After a win the hero must stand still until the player does something new, even if a key or a thumb is
+// still down from before. After a fall a held key or thumb keeps working.
 const course = loadFirstCourse();
 const NOTHING: Wish = { left: false, right: false, up: false, down: false, jump: false };
 let game: Game | undefined;
@@ -135,33 +135,28 @@ describe('after Play again', () => {
 });
 
 describe('after a fall', () => {
-  it('stands still while the key that ran off the edge is still held', async () => {
-    const g = await open(false);
-    const startY = g.snapshot().y;
-    pressKeys({ ...NOTHING, left: true });
-    for (let t = 0; t < 6000 && g.snapshot().falls === 0; t += 50) g.advance(50);
-    expect(g.snapshot().falls).toBe(1);
-    key('keydown', 'ArrowLeft', true);
-    g.advance(2500);
+  // The player should not have to lift a finger to try again: a held key or thumb keeps running from the start.
+  const ranOn = (g: Game): void => {
+    expect(g.snapshot().falls).toBeGreaterThanOrEqual(1);
     const s = g.snapshot();
-    expect(s.falls).toBe(1);
-    expect(Math.hypot(s.x - course.start.x, s.z - course.start.z)).toBeLessThan(0.1);
-    expect(s.y).toBeCloseTo(startY, 1);
+    expect(Math.hypot(s.x - course.start.x, s.z - course.start.z)).toBeGreaterThan(0.3);
+  };
+
+  it('keeps running from the start while the key that ran off the edge is still held', async () => {
+    const g = await open(false);
+    pressKeys({ ...NOTHING, up: true });
+    for (let t = 0; t < 6000 && g.snapshot().falls === 0; t += 10) g.advance(10);
+    expect(g.snapshot().falls).toBe(1);
+    g.advance(250);
+    ranOn(g);
   });
 
-  it('stands still while the thumb that ran off the edge stays on the stick, then runs on a new touch', async () => {
+  it('keeps running from the start while the thumb that ran off the edge stays on the stick', async () => {
     const g = await open(true);
-    const thumb = thumbOnStick(1, -1, 0);
-    for (let t = 0; t < 6000 && g.snapshot().falls === 0; t += 50) g.advance(50);
+    thumbOnStick(1, 0, -1);
+    for (let t = 0; t < 6000 && g.snapshot().falls === 0; t += 10) g.advance(10);
     expect(g.snapshot().falls).toBe(1);
-    thumb.move();
-    g.advance(1500);
-    const s = g.snapshot();
-    expect(s.falls).toBe(1);
-    expect(Math.hypot(s.x - course.start.x, s.z - course.start.z)).toBeLessThan(0.1);
-    thumb.lift();
-    thumbOnStick(2, 0, -1);
-    g.advance(500);
-    expect(course.start.z - g.snapshot().z).toBeGreaterThan(1);
+    g.advance(250);
+    ranOn(g);
   });
 });

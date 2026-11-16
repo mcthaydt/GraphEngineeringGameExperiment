@@ -2,7 +2,7 @@
 name = "First steps"
 fall_y = -9.0
 start = { x = 0.0, y = 0.0, z = 0.0 }
-flag = { x = 0.0, y = 2.4, z = -56.0 }
+flag = { x = 0.0, y = 2.4, z = -53.1 }
 
 # A wide, safe place to learn to run.
 [[platforms]]
@@ -58,18 +58,18 @@ z = -40.0
 width = 2.6
 depth = 2.6
 
-# A breather before the last leap.
+# A small stone close by and a step up: a short hop. A full leap would carry past it.
 [[platforms]]
 x = 0.0
-y = 2.4
-z = -46.5
-width = 4.5
-depth = 4.5
+y = 3.0
+z = -43.9
+width = 2.0
+depth = 1.6
 
-# The flag's island.
+# The flag's island, after the longest leap: it drops a little, so a held jump from the stone's far edge makes it.
 [[platforms]]
 x = 0.0
 y = 2.4
-z = -55.0
+z = -51.95
 width = 6.5
 depth = 6.5

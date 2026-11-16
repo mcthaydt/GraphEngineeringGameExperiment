@@ -17,7 +17,8 @@ export interface Intent {
 export const IDLE: Intent = { moveX: 0, moveZ: 0, jump: false };
 
 export type SimEvent =
-  | { readonly type: 'jump' }
+  /** `speed` is how fast it was running along the ground, m/s. */
+  | { readonly type: 'jump'; readonly speed: number }
   | { readonly type: 'land'; readonly speed: number }
   /** The hero has dropped off the course and is still falling: the moment for the fall sound. */
   | { readonly type: 'drop' }
@@ -84,8 +85,8 @@ export function createSim(course: Course, tuning: Tuning): Sim {
   controller.enableSnapToGround(0.1);
   physics.step();
 
-  // A window that opens on one step and is read on the next lasts a step short, and the ground is seen a step after it
-  // is reached: the extra steps make each last as long as the setting says.
+  // A window opened on one step and read on a later one lasts a step short, and the ground is seen a step after it
+  // is reached: the buffer gets two steps more and the coyote time one, so each lasts as long as the setting says.
   const coyoteSteps = msToSteps(t.coyote_ms) + 1;
   const bufferSteps = msToSteps(t.jump_buffer_ms) + 2;
   const down = { x: 0, y: -1, z: 0 };
@@ -111,7 +112,7 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     place(s.x, s.y, s.z);
     hero.set(Velocity, { x: 0, y: 0, z: 0 });
     // Starting on the ground, so the first step is a normal step from rest and not a landing.
-    hero.set(Hero, { grounded: true, facing: Math.PI, coyote: coyoteSteps, jumpBuffer: 0, jumpHeld: false, rising: false });
+    hero.set(Hero, { grounded: true, facing: Math.PI, coyote: coyoteSteps, jumpBuffer: 0, jumpHeld: false, rising: false, hooked: false });
     standingY = s.y;
     dropped = false;
     physics.step();
@@ -139,13 +140,13 @@ export function createSim(course: Course, tuning: Tuning): Sim {
 
     h.jumpBuffer = want.jump && !h.jumpHeld ? bufferSteps : Math.max(0, h.jumpBuffer - 1);
     h.jumpHeld = want.jump;
-    if (h.jumpBuffer > 0 && (h.grounded || h.coyote > 0)) {
+    if (h.jumpBuffer > 0 && (h.grounded || h.coyote > 0 || h.hooked)) {
       vel.y = t.jump_speed;
       h.grounded = false;
       h.coyote = 0;
       h.jumpBuffer = 0;
       h.rising = true;
-      events.push({ type: 'jump' });
+      events.push({ type: 'jump', speed: Math.hypot(vel.x, vel.z) });
     } else if (h.rising && !want.jump && vel.y > 0) {
       vel.y *= t.jump_cut;
       h.rising = false;
@@ -167,7 +168,8 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     pos.y += moved.y;
     pos.z += moved.z;
     // Resting on a platform's lip with the middle of the body in the air is not standing: it slides off instead of hovering.
-    h.grounded = controller.computedGrounded() && vel.y <= 0 && groundBelow(pos, 0.3) !== null;
+    const resting = controller.computedGrounded() && vel.y <= 0;
+    h.grounded = resting && groundBelow(pos, 0.3) !== null;
 
     // A blocked axis loses its speed, so the player does not stick to or grind along what it hit.
     if (Math.abs(moved.x - wanted.x) > 1e-5) vel.x = moved.x / STEP_SECONDS;
@@ -182,6 +184,8 @@ export function createSim(course: Course, tuning: Tuning): Sim {
     } else {
       h.coyote = Math.max(0, h.coyote - 1);
     }
+    // Hooked on a lip, the hero can still jump: it may be pressing forward into an edge it just failed to clear.
+    h.hooked = resting && !h.grounded;
 
     hero.set(Velocity, vel);
     hero.set(Hero, h);
