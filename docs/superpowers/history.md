@@ -33,8 +33,8 @@
 - 2026-11-16 19:21 UTC: the owner asked for a retro after every slice (instead of a daily one). Scope: the Retro bullet
   and Settings wording in CLAUDE.md, the retro stage in the `vertical-slice` skill and the lesson line in `review`.
   Not covered by that message: the "Flaky tests" section in this file and the CLAUDE.md Tests wording that points to
-  it, added after review (audit cycle 6) so the retro can find flaky tests. They wait for the owner's OK on the
-  finished pull request #10.
+  it, added after review (audit cycle 6) so the retro can find flaky tests. The owner approved them separately on a
+  decision card at 19:27 UTC (kept). Scope: those two lines only.
 - 2026-11-16 16:14 UTC: the owner said "ok" to merging PR #1 once CI is green and to requiring the `gate` check on
   `main` with branch protection. Scope: PR #1 and that one repository setting.
 - 2026-11-16 16:29 UTC: the owner accepted one fresh implementation audit for PR #1 in place of a spec and plan audit
